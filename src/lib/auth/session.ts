@@ -41,7 +41,7 @@ export async function establishSession(userId: string, token = randomBytes(32).t
   await setSessionCookie(token);
 }
 
-const readCurrentUser = async (): Promise<CurrentUser | null> => {
+const readCurrentUser = async (touchSession = true): Promise<CurrentUser | null> => {
   if (!hasSupabaseConfig() || !env.SESSION_SECRET) return null;
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
@@ -66,7 +66,7 @@ const readCurrentUser = async (): Promise<CurrentUser | null> => {
   const now = Date.now();
   const lastSeenMs = Date.parse(session.last_seen_at);
   const lastSeenRefreshIntervalMs = 5 * 60 * 1000;
-  if (expiresMs - now < SESSION_DURATION_SECONDS * 1000 / 2 && now - lastSeenMs >= lastSeenRefreshIntervalMs) {
+  if (touchSession && expiresMs - now < SESSION_DURATION_SECONDS * 1000 / 2 && now - lastSeenMs >= lastSeenRefreshIntervalMs) {
     const refreshCutoff = new Date(now - lastSeenRefreshIntervalMs).toISOString();
     after(async () => {
       await supabase.from("user_sessions").update({ last_seen_at: new Date().toISOString() })
@@ -79,6 +79,7 @@ const readCurrentUser = async (): Promise<CurrentUser | null> => {
 // React cache is scoped to the current server render, so layout and page checks
 // share one lookup without sharing a user's identity across requests.
 export const getCurrentUser = cache(readCurrentUser);
+export const getCurrentUserReadOnly = cache(() => readCurrentUser(false));
 
 export async function revokeCurrentSession() {
   const jar = await cookies();

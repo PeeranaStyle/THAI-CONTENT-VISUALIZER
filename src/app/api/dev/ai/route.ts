@@ -5,9 +5,11 @@ import { createTracedCompletion } from "@/lib/ai/client";
 import { generateGraphCore } from "@/lib/ai/graph-core";
 import { AiOutputError } from "@/lib/ai/output";
 import { generateQuizCore } from "@/lib/ai/quiz-core";
+import { generateNotesCore } from "@/lib/ai/notes-core";
 import { categorizeAiError, createAiRequestTrace } from "@/lib/ai/telemetry";
 import { env, hasIntelSphereConfig } from "@/lib/env";
 import { isSameOrigin } from "@/lib/auth/security";
+import { getCurrentUser } from "@/lib/auth/session";
 import type { CompletionRequest } from "@/lib/ai/quiz-core";
 
 export const maxDuration = 300;
@@ -23,14 +25,15 @@ const schema = z.discriminatedUnion("operation", [
     operation: z.literal("quiz"),
     title: z.string().trim().min(2).max(140),
     sourceText: z.string().trim().min(120).max(120_000),
-    questionCount: z.number().int().min(5).max(20),
+    questionCount: z.number().int().min(1).max(3),
     difficulty: z.enum(["easy", "medium", "hard", "mixed"]),
     questionType: z.enum(["multiple_choice", "true_false", "mixed"]),
   }),
+  z.object({ operation: z.literal("notes"), title: z.string().trim().min(2).max(140), sourceText: z.string().trim().min(80).max(120_000) }),
 ]);
 
 export async function POST(request: Request) {
-  if (process.env.NODE_ENV === "production") return jsonError("Dev AI tools are disabled in production.", 404, "NOT_FOUND");
+  if (process.env.NODE_ENV === "production" && (await getCurrentUser())?.role !== "admin") return jsonError("Not found.", 404, "NOT_FOUND");
   if (!isSameOrigin(request)) return jsonError("Same-origin request required.", 403, "ORIGIN_REJECTED");
   if (!hasIntelSphereConfig()) return jsonError("IntelSphere is not configured.", 503, "AI_NOT_CONFIGURED");
 
@@ -39,9 +42,9 @@ export async function POST(request: Request) {
 
   const trace = createAiRequestTrace(request, input.data.operation, env.INTELSPHERE_MODEL);
   const rawCalls: Array<Record<string, unknown>> = [];
-  const requestCompletion: CompletionRequest = async (activeTrace, params) => {
+  const requestCompletion: CompletionRequest = async (activeTrace, params, signal) => {
     const requestStartedAt = performance.now();
-    const completion = await createTracedCompletion(activeTrace, params);
+    const completion = await createTracedCompletion(activeTrace, params, signal);
     const choice = completion.choices[0];
     rawCalls.push({
       callNumber: rawCalls.length + 1,
@@ -62,14 +65,16 @@ export async function POST(request: Request) {
 
   try {
     const result = input.data.operation === "graph"
-      ? await generateGraphCore(input.data.title, input.data.sourceText, trace, env.INTELSPHERE_MODEL, requestCompletion)
-      : await generateQuizCore({
+      ? await generateGraphCore(input.data.title, input.data.sourceText, trace, env.INTELSPHERE_MODEL, requestCompletion, request.signal)
+      : input.data.operation === "quiz"
+        ? await generateQuizCore({
         count: input.data.questionCount,
         difficulty: input.data.difficulty,
         questionType: input.data.questionType,
         materialTitle: input.data.title,
         sourceText: input.data.sourceText,
-      }, trace, env.INTELSPHERE_MODEL, requestCompletion);
+        }, trace, env.INTELSPHERE_MODEL, requestCompletion, request.signal)
+        : await generateNotesCore(input.data.title, input.data.sourceText, trace, env.INTELSPHERE_MODEL, requestCompletion, request.signal);
 
     return jsonOk({ success: true, operation: input.data.operation, model: result.model, result, rawCalls, trace: safeTrace(trace) });
   } catch (error) {

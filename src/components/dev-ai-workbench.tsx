@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 
-type Operation = "quiz" | "graph";
+type Operation = "quiz" | "graph" | "notes";
 type RunResponse = {
   success: boolean;
   operation: Operation;
@@ -45,9 +45,9 @@ export function DevAiWorkbench() {
     setResponse(null);
     setRequestError(null);
     try {
-      const body = operation === "graph"
-        ? { operation, title, sourceText }
-        : { operation, title, sourceText, questionCount, difficulty, questionType };
+      const body = operation === "quiz"
+        ? { operation, title, sourceText, questionCount, difficulty, questionType }
+        : { operation, title, sourceText };
       const result = await fetch("/api/dev/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -71,11 +71,11 @@ export function DevAiWorkbench() {
       <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#55738a]">Local development tool</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#55738a]">AI generation workbench</p>
             <h1 className="mt-2 text-3xl font-bold">AI Pipeline Workbench</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[#536776]">ส่งบทเรียนผ่าน prompt, model, validator และ recovery ชุดเดียวกับ production แสดง raw prompt และ raw response แยกตาม model call โดยไม่บันทึกลงฐานข้อมูล</p>
           </div>
-          <span className="rounded-full border border-[#bdd4c9] bg-[#eaf5ef] px-3 py-1.5 text-xs font-semibold text-[#286548]">Disabled in production</span>
+          <span className="rounded-full border border-[#bdd4c9] bg-[#eaf5ef] px-3 py-1.5 text-xs font-semibold text-[#286548]">Production access: admin only</span>
         </div>
 
         <form onSubmit={run} className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
@@ -85,6 +85,7 @@ export function DevAiWorkbench() {
                 <select value={operation} onChange={event => setOperation(event.target.value as Operation)} className="h-10 rounded-lg border border-[#ccd6de] bg-white px-3 font-normal">
                   <option value="graph">Knowledge Graph</option>
                   <option value="quiz">Quiz</option>
+                  <option value="notes">Study Notes</option>
                 </select>
               </label>
               <label className="grid gap-1.5 text-sm font-semibold">Lesson title
@@ -94,7 +95,7 @@ export function DevAiWorkbench() {
             {operation === "quiz" && <div className="mt-4 grid gap-4 sm:grid-cols-3">
               <label className="grid gap-1.5 text-sm font-semibold">Question count
                 <select value={questionCount} onChange={event => setQuestionCount(Number(event.target.value))} className="h-10 rounded-lg border border-[#ccd6de] bg-white px-3 font-normal">
-                  {[5, 10, 15, 20].map(count => <option key={count} value={count}>{count}</option>)}
+                  {[1, 2, 3].map(count => <option key={count} value={count}>{count}</option>)}
                 </select>
               </label>
               <label className="grid gap-1.5 text-sm font-semibold">Difficulty
@@ -112,7 +113,7 @@ export function DevAiWorkbench() {
               <textarea value={sourceText} onChange={event => setSourceText(event.target.value)} maxLength={120_000} required rows={16} className="resize-y rounded-lg border border-[#ccd6de] p-3 font-mono text-sm leading-6" />
             </label>
             <button disabled={busy} className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#156b62] px-5 text-sm font-semibold text-white hover:bg-[#10564f] disabled:cursor-wait disabled:opacity-60">
-              {busy ? "รอผลจากโมเดล…" : `Run ${operation === "graph" ? "Graph" : "Quiz"} pipeline`}
+              {busy ? "รอผลจากโมเดล…" : `Run ${operation === "graph" ? "Graph" : operation === "quiz" ? "Quiz" : "Notes"} pipeline`}
             </button>
             {requestError && <p role="alert" className="mt-3 rounded-lg bg-[#fff1ef] p-3 text-sm text-[#9c3028]">{requestError}</p>}
           </section>

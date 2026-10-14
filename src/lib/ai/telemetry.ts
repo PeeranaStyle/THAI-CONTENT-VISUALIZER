@@ -4,7 +4,7 @@ import OpenAI from "openai";
 import { jsonError } from "@/lib/api";
 import { AiOutputError } from "@/lib/ai/output";
 
-export type AiOperation = "quiz" | "graph";
+export type AiOperation = "quiz" | "graph" | "notes";
 
 export type AiRequestTrace = {
   requestId: string;
@@ -105,10 +105,20 @@ export async function withAiRequestTelemetry(
     response = await handler(trace);
   } catch (error) {
     trace.errorCategory = categorizeAiError(error);
+    const failureCode = trace.errorCategory === "timeout" ? "AI_UPSTREAM_TIMEOUT"
+      : trace.errorCategory === "parsing" ? "AI_OUTPUT_PARSING_FAILED"
+        : trace.errorCategory === "validation" ? "AI_OUTPUT_VALIDATION_FAILED"
+          : trace.errorCategory === "truncated" ? "AI_OUTPUT_TRUNCATED"
+            : trace.errorCategory === "upstream" ? "AI_UPSTREAM_FAILED"
+              : "AI_GENERATION_FAILED";
     response = jsonError(
-      "AI generation could not be completed. Please retry shortly.",
+      trace.errorCategory === "timeout" ? "IntelSphere timed out. Please retry the generation request."
+        : trace.errorCategory === "parsing" ? "IntelSphere returned a response that could not be parsed."
+          : trace.errorCategory === "validation" ? "IntelSphere returned content that did not pass validation."
+            : trace.errorCategory === "truncated" ? "IntelSphere truncated the response. Reduce the request or try again."
+              : "AI generation could not be completed. Please retry shortly.",
       trace.errorCategory === "timeout" ? 504 : 502,
-      trace.errorCategory === "timeout" ? "AI_UPSTREAM_TIMEOUT" : "AI_GENERATION_FAILED",
+      failureCode,
     );
   }
 

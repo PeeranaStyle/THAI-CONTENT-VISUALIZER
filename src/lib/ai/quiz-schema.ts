@@ -41,12 +41,13 @@ export function normalizeText(value: string): string {
 export function validateGeneratedQuestions(
   payload: unknown,
   sourceText: string,
-  options: { existingQuestions?: readonly GeneratedQuestion[]; expectedType?: "multiple_choice" | "true_false" } = {},
+  options: { existingQuestions?: readonly GeneratedQuestion[]; existingQuestionTexts?: readonly string[]; expectedType?: "multiple_choice" | "true_false" } = {},
 ) {
   const envelope = generatedQuizPayloadSchema.safeParse(payload);
   if (!envelope.success) return { questions: [] as GeneratedQuestion[], rejectedCount: 0, diagnostics: ["quiz_payload_invalid"], error: "AI response did not contain a usable question list." };
   const source = normalizeText(sourceText);
   const seen = new Set((options.existingQuestions ?? []).map(question => normalizeText(question.question)));
+  for (const questionText of options.existingQuestionTexts ?? []) seen.add(normalizeText(questionText));
   const questions: GeneratedQuestion[] = [];
   const diagnostics: string[] = [];
   let rejectedCount = 0;

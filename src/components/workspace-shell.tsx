@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Activity, BarChart3, BookOpenText, ChevronDown, CircleHelp, Clock3, FileText, GraduationCap, LayoutDashboard, Network, Settings2, UserRound } from "lucide-react";
-import { Brand, PathwayArtwork } from "@/components/brand";
+import { BarChart3, BookOpenText, ChevronDown, CircleHelp, Clock3, FileText, GraduationCap, LayoutDashboard, Network, Settings2, UserRound } from "lucide-react";
+import { Brand } from "@/components/brand";
 import { LogoutButton } from "@/components/logout-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import type { CurrentUser } from "@/lib/auth/session";
@@ -53,10 +53,6 @@ export function WorkspaceShell({ user, children }: { user: CurrentUser; children
         <p className="mb-2 mt-7 px-3 text-[10px] font-semibold tracking-[.13em] text-white/40">ติดตามความก้าวหน้า</p>
         <ul className="space-y-1">{progressNav.map(item => <NavItem key={item.href} item={item} pathname={pathname} />)}</ul>
       </nav>
-      <div className="mb-3 overflow-hidden rounded-[18px] border border-white/10 bg-white/[.06] p-3">
-        <div className="flex items-center justify-between"><span className="text-[11px] font-medium text-white/75">เส้นทางแนวคิด</span><Activity className="size-3.5 text-[#c5e1ca]" /></div>
-        <div className="mt-2 h-[62px] overflow-hidden rounded-xl bg-white/[.06]"><PathwayArtwork compact /></div>
-      </div>
       <Link href="/settings" aria-current={pathname === "/settings" ? "page" : undefined} className={`flex min-h-10 items-center gap-3 rounded-xl px-3 text-[12px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-primary ${pathname === "/settings" ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/75 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"}`}><Settings2 className="size-4" />ตั้งค่า</Link>
       <div className="mt-3 flex items-center gap-2 border-t border-white/10 pt-3">
         <span className="grid size-9 shrink-0 place-items-center rounded-full bg-sidebar-accent text-[12px] font-bold text-sidebar-accent-foreground">{initials || "M"}</span>

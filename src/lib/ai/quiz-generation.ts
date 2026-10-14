@@ -6,6 +6,6 @@ import type { AiRequestTrace } from "@/lib/ai/telemetry";
 
 export type { QuizGenerationOptions } from "@/lib/ai/quiz-core";
 
-export function generateQuiz(options: QuizGenerationOptions, trace: AiRequestTrace) {
-  return generateQuizCore(options, trace, env.INTELSPHERE_MODEL, createTracedCompletion);
+export function generateQuiz(options: QuizGenerationOptions, trace: AiRequestTrace, signal?: AbortSignal) {
+  return generateQuizCore(options, trace, env.INTELSPHERE_MODEL, createTracedCompletion, signal);
 }

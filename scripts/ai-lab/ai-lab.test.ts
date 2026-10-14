@@ -4,6 +4,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import OpenAI from "openai";
 import { beforeAll, describe, expect, it } from "vitest";
+import type { GeneratedQuestion } from "../../src/lib/ai/quiz-schema";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const resultDir = resolve(root, "scripts/ai-lab/results");
@@ -256,7 +257,16 @@ describe("real IntelSphere integration lab (no app auth or database)", () => {
     for (const count of counts) {
       const trace = newTrace(); trace.sourceCharacterCount = source.length;
       try {
-        const result = await generateQuiz({ count, difficulty: "mixed", questionType: "mixed", materialTitle: "Solar energy in school", sourceText: source }, trace);
+        const questions: GeneratedQuestion[] = [];
+        let rejectedCount = 0;
+        let requests = 0;
+        while (questions.length < count && requests < count + 5) {
+          const batch = await generateQuiz({ count: Math.min(3, count - questions.length), difficulty: "mixed", questionType: "mixed", materialTitle: "Solar energy in school", sourceText: source, existingQuestionTexts: questions.map(question => question.question) }, trace);
+          questions.push(...batch.questions); rejectedCount += batch.rejectedCount; requests += 1;
+          if (!batch.questions.length) throw new Error("quiz_batch_returned_no_valid_questions");
+        }
+        if (questions.length !== count) throw new Error(`quiz_incomplete_${questions.length}_of_${count}`);
+        const result = { questions, rejectedCount };
         const outcome = { test: `quiz_${count}`, requestedCount: count, validCount: result.questions.length, validation: "passed", ...metrics(trace) };
         runs.push(outcome);
         await saveResult(`quiz-${count}`, { ...outcome, quiz: result.questions });
@@ -280,14 +290,24 @@ describe("real IntelSphere integration lab (no app auth or database)", () => {
       trace.sourceCharacterCount = thaiLesson.length;
       const started = performance.now();
       try {
-        const result = await generateQuiz({
-          count, difficulty: "mixed", questionType: "mixed",
-          materialTitle: "พลังงานแสงอาทิตย์ในโรงเรียน", sourceText: thaiLesson,
-        }, trace);
+        const questions: GeneratedQuestion[] = [];
+        let rejectedCount = 0;
+        let requests = 0;
+        while (questions.length < count && requests < count + 5) {
+          const batch = await generateQuiz({
+            count: Math.min(3, count - questions.length), difficulty: "mixed", questionType: "mixed",
+            materialTitle: "พลังงานแสงอาทิตย์ในโรงเรียน", sourceText: thaiLesson,
+            existingQuestionTexts: questions.map(question => question.question),
+          }, trace);
+          questions.push(...batch.questions); rejectedCount += batch.rejectedCount; requests += 1;
+          if (!batch.questions.length) throw new Error("quiz_batch_returned_no_valid_questions");
+        }
+        if (questions.length !== count) throw new Error(`quiz_incomplete_${questions.length}_of_${count}`);
+        const result = { questions, rejectedCount };
         const outcome = {
           test: `quiz_reliability_${count}`, model: trace.modelId, success: true,
           requestedCount: count, acceptedCount: result.questions.length, rejectedCount: result.rejectedCount,
-          recoveryAttempts: result.replacementRounds, totalModelCalls: trace.batchCount,
+          recoveryAttempts: 0, totalModelCalls: trace.batchCount,
           latencyMs: Math.round(performance.now() - started), finishReasons: trace.finishReasons,
           promptTokens: trace.inputTokens, completionTokens: trace.outputTokens, totalTokens: trace.totalTokens,
         };
@@ -304,7 +324,7 @@ describe("real IntelSphere integration lab (no app auth or database)", () => {
         const outcome = {
           test: `quiz_reliability_${count}`, model: trace.modelId, success: false,
           requestedCount: count, acceptedCount: details?.acceptedCount ?? null, rejectedCount: details?.rejectedCount ?? null,
-          recoveryAttempts: details?.replacementRounds ?? null, totalModelCalls: trace.batchCount,
+          recoveryAttempts: null, totalModelCalls: trace.batchCount,
           latencyMs: Math.round(performance.now() - started), finishReasons: trace.finishReasons,
           promptTokens: trace.inputTokens, completionTokens: trace.outputTokens, totalTokens: trace.totalTokens,
           errorCategory: trace.errorCategory ?? "generation_error", sanitizedDiagnostic: diagnostic,
