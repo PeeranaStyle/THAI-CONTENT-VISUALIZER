@@ -24,7 +24,7 @@ export function isSameOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
   if (!origin) return false;
   try {
-    const expected = env.APP_ORIGIN || new URL(request.url).origin;
-    return new URL(origin).origin === new URL(expected).origin;
+    // Compare against the request's own host to support localhost aliases and previews.
+    return new URL(origin).origin === new URL(request.url).origin;
   } catch { return false; }
 }

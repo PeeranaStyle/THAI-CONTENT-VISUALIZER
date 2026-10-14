@@ -11,7 +11,6 @@ const schema = z.object({
   INTELSPHERE_API_KEY: optionalString,
   INTELSPHERE_MODEL: z.string().default("gemini-2.5-flash-lite"),
   SESSION_SECRET: optionalString,
-  APP_ORIGIN: optionalUrl,
   MAX_UPLOAD_BYTES: z.coerce.number().int().positive().default(25_000_000),
 });
 
@@ -23,7 +22,6 @@ export const env = schema.parse({
   INTELSPHERE_API_KEY: process.env.INTELSPHERE_API_KEY,
   INTELSPHERE_MODEL: process.env.INTELSPHERE_MODEL ?? "gemini-2.5-flash-lite",
   SESSION_SECRET: process.env.SESSION_SECRET,
-  APP_ORIGIN: process.env.APP_ORIGIN,
   MAX_UPLOAD_BYTES: process.env.MAX_UPLOAD_BYTES ?? "25000000",
 });
 
