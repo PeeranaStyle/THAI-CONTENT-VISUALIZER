@@ -44,16 +44,25 @@ export function validateGeneratedQuestions(payload: unknown, sourceText: string)
   const source = normalizeText(sourceText);
   const seen = new Set<string>();
   const questions: GeneratedQuestion[] = [];
+  const diagnostics: string[] = [];
   let rejectedCount = 0;
-  for (const candidate of envelope.data.questions) {
+  for (const [index, candidate] of envelope.data.questions.entries()) {
     const parsed = generatedQuestionSchema.safeParse(candidate);
-    if (!parsed.success) { rejectedCount += 1; continue; }
+    if (!parsed.success) {
+      rejectedCount += 1;
+      diagnostics.push(...parsed.error.issues.slice(0, 4).map(issue => `question_${index}_schema_${issue.path.join("_") || "root"}_${issue.code}`));
+      continue;
+    }
     const question = parsed.data;
     const key = normalizeText(question.question);
     const grounded = question.sourceReferences.every(reference => source.includes(normalizeText(reference.quote)));
-    if (!grounded || seen.has(key)) { rejectedCount += 1; continue; }
+    if (!grounded || seen.has(key)) {
+      rejectedCount += 1;
+      diagnostics.push(!grounded ? `question_${index}_citation_not_found` : `question_${index}_duplicate`);
+      continue;
+    }
     seen.add(key);
     questions.push(question);
   }
-  return { questions, rejectedCount, error: questions.length ? undefined : "No valid source-grounded questions were returned." };
+  return { questions, rejectedCount, diagnostics, error: questions.length ? undefined : "No valid source-grounded questions were returned." };
 }

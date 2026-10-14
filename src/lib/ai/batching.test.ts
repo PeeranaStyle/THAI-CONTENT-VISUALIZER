@@ -7,7 +7,7 @@ describe("quiz output batching", () => {
     const calls: number[] = [];
     const result = await collectDistinctBatches<string>({
       count: 5,
-      batchSize: 2,
+      batchSize: 3,
       key: question => question,
       generate: async count => {
         calls.push(count);
@@ -17,7 +17,7 @@ describe("quiz output batching", () => {
     });
     expect(result).toHaveLength(5);
     expect(new Set(result).size).toBe(5);
-    expect(calls).toEqual([2, 2, 1]);
+    expect(calls).toEqual([3, 2]);
   });
 
   it("splits a truncated batch into smaller, different requests", async () => {
@@ -50,5 +50,14 @@ describe("quiz output batching", () => {
       },
     });
     expect(result).toEqual(["same", "different"]);
+  });
+
+  it("stops before starting another request when the total time budget is exhausted", async () => {
+    let requestStarted = false;
+    await expect(collectDistinctBatches<string>({
+      count: 1, batchSize: 1, totalBudgetMs: 1, reserveRequestMs: 1, key: item => item,
+      generate: async () => { requestStarted = true; return ["unused"]; },
+    })).rejects.toMatchObject({ category: "timeout", diagnostic: "quiz_generation_budget_exhausted" });
+    expect(requestStarted).toBe(false);
   });
 });

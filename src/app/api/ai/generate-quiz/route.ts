@@ -7,6 +7,8 @@ import { generateQuiz } from "@/lib/ai/quiz-generation";
 import { categorizeAiError, measureAiDatabase, withAiRequestTelemetry, type AiRequestTrace } from "@/lib/ai/telemetry";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
+export const maxDuration = 300;
+
 const schema = z.object({
   materialId: z.string().uuid(),
   title: z.string().trim().min(2).max(140).optional(),

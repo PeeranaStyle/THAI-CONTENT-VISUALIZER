@@ -20,19 +20,25 @@ export const generatedGraphSchema = z.object({
 
 export function validateGeneratedGraph(value: unknown, sourceText: string) {
   const parsed = generatedGraphSchema.safeParse(value);
-  if (!parsed.success) return { graph: null, error: "IntelSphere returned a graph with an invalid structure." };
+  if (!parsed.success) return {
+    graph: null,
+    error: "IntelSphere returned a graph with an invalid structure.",
+    diagnostics: parsed.error.issues.slice(0, 12).map(issue => `schema_${issue.path.join("_") || "root"}_${issue.code}`),
+  };
   const graph = parsed.data;
   const keys = new Set(graph.nodes.map(node => node.conceptKey));
-  if (keys.size !== graph.nodes.length || !keys.has(graph.centralConceptKey)) return { graph: null, error: "The graph has duplicate concepts or no central concept." };
+  if (keys.size !== graph.nodes.length) return { graph: null, error: "The graph has duplicate concepts.", diagnostics: ["duplicate_concept_key"] };
+  if (!keys.has(graph.centralConceptKey)) return { graph: null, error: "The graph has no central concept.", diagnostics: ["central_concept_key_missing"] };
   const source = normalizeText(sourceText);
-  if (graph.nodes.some(node => node.sourceReferences.some(reference => !source.includes(normalizeText(reference.quote))))) return { graph: null, error: "A concept citation could not be verified in the source material." };
+  const invalidCitation = graph.nodes.findIndex(node => node.sourceReferences.some(reference => !source.includes(normalizeText(reference.quote))));
+  if (invalidCitation >= 0) return { graph: null, error: "A concept citation could not be verified in the source material.", diagnostics: [`citation_not_found_node_${invalidCitation}`] };
   const edges = new Set<string>();
   for (const edge of graph.edges) {
-    if (!keys.has(edge.sourceConceptKey) || !keys.has(edge.targetConceptKey) || edge.sourceConceptKey === edge.targetConceptKey) return { graph: null, error: "A graph relationship refers to a missing concept." };
+    if (!keys.has(edge.sourceConceptKey) || !keys.has(edge.targetConceptKey) || edge.sourceConceptKey === edge.targetConceptKey) return { graph: null, error: "A graph relationship refers to a missing concept.", diagnostics: ["edge_endpoint_missing_or_self_reference"] };
     const signature = `${edge.sourceConceptKey}\0${edge.targetConceptKey}\0${edge.relationship}`;
-    if (edges.has(signature)) return { graph: null, error: "The graph contains duplicate relationships." };
+    if (edges.has(signature)) return { graph: null, error: "The graph contains duplicate relationships.", diagnostics: ["duplicate_relationship"] };
     edges.add(signature);
   }
-  if (!graph.nodes.some(node => node.conceptKey === graph.centralConceptKey && node.nodeType === "central")) return { graph: null, error: "The central concept is missing its central-node type." };
-  return { graph, error: undefined };
+  if (!graph.nodes.some(node => node.conceptKey === graph.centralConceptKey && node.nodeType === "central")) return { graph: null, error: "The central concept is missing its central-node type.", diagnostics: ["central_node_type_mismatch"] };
+  return { graph, error: undefined, diagnostics: [] as string[] };
 }

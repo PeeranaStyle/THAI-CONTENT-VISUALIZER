@@ -12,6 +12,7 @@ output/playwright/
 .npm-cache/
 .playwright-cli/
 .tmp/
+scripts/ai-lab/results/
 .agents/
 audit-report.json
 lint-results.json

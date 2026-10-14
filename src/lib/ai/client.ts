@@ -47,8 +47,12 @@ export async function createTracedCompletion(
     trace.modelId = String(completion.model || params.model);
     trace.finishReason = completion.choices[0]?.finish_reason ?? null;
     if (trace.finishReason) trace.finishReasons.push(trace.finishReason);
+    const message = completion.choices[0]?.message as (typeof completion.choices)[number]["message"] & { reasoning?: unknown } | undefined;
+    trace.completionMessageFields.push(message ? Object.keys(message) : []);
+    trace.reasoningCharacterCounts.push(typeof message?.reasoning === "string" ? message.reasoning.length : null);
     if (typeof completion.usage?.prompt_tokens === "number") trace.inputTokens = (trace.inputTokens ?? 0) + completion.usage.prompt_tokens;
     if (typeof completion.usage?.completion_tokens === "number") trace.outputTokens = (trace.outputTokens ?? 0) + completion.usage.completion_tokens;
+    if (typeof completion.usage?.total_tokens === "number") trace.totalTokens = (trace.totalTokens ?? 0) + completion.usage.total_tokens;
     const reasoningTokens = completion.usage?.completion_tokens_details?.reasoning_tokens;
     if (typeof reasoningTokens === "number") trace.reasoningTokens = (trace.reasoningTokens ?? 0) + reasoningTokens;
     const quota = (completion as typeof completion & { model_quota?: Record<string, unknown> }).model_quota;

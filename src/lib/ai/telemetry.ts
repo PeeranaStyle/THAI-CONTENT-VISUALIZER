@@ -21,7 +21,11 @@ export type AiRequestTrace = {
   finishReasons: string[];
   inputTokens: number | null;
   outputTokens: number | null;
+  totalTokens: number | null;
   reasoningTokens: number | null;
+  reasoningCharacterCounts: Array<number | null>;
+  completionMessageFields: string[][];
+  responseStructure: string[];
   upstreamContentType: string | null;
   requestedMaxTokens: number | null;
   batchCount: number;
@@ -45,7 +49,11 @@ export function createAiRequestTrace(request: Request, operation: AiOperation, m
     finishReasons: [],
     inputTokens: null,
     outputTokens: null,
+    totalTokens: null,
     reasoningTokens: null,
+    reasoningCharacterCounts: [],
+    completionMessageFields: [],
+    responseStructure: [],
     upstreamContentType: null,
     requestedMaxTokens: null,
     batchCount: 0,
@@ -76,7 +84,9 @@ export function categorizeAiError(error: unknown): string {
     if (error.status === 408 || error.status === 504) return "timeout";
     return "upstream";
   }
+  if (error instanceof SyntaxError || error instanceof Error && /invalid json|json parse|unexpected token/i.test(error.message)) return "parsing";
   if (error instanceof Error && /timeout|timed out|abort/i.test(`${error.name} ${error.message}`)) return "timeout";
+  if (error instanceof Error && /fetch failed|network|socket|econn|upstream connection/i.test(error.message)) return "upstream";
   return "persistence";
 }
 
@@ -131,7 +141,10 @@ export async function withAiRequestTelemetry(
     finishReasons: trace.finishReasons,
     inputTokens: trace.inputTokens,
     outputTokens: trace.outputTokens,
+    totalTokens: trace.totalTokens,
     reasoningTokens: trace.reasoningTokens,
+    reasoningCharacterCounts: trace.reasoningCharacterCounts,
+    completionMessageFields: trace.completionMessageFields,
     upstreamContentType: trace.upstreamContentType,
     requestedMaxTokens: trace.requestedMaxTokens,
     batchCount: trace.batchCount,

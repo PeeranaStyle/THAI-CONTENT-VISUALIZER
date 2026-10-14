@@ -5,8 +5,11 @@ export async function collectDistinctBatches<T>(options: {
   batchSize: number;
   key: (item: T) => string;
   generate: (count: number, previous: readonly T[]) => Promise<readonly T[]>;
+  totalBudgetMs?: number;
+  reserveRequestMs?: number;
 }): Promise<T[]> {
-  const { count, batchSize, key, generate } = options;
+  const { count, batchSize, key, generate, totalBudgetMs, reserveRequestMs = 0 } = options;
+  const deadline = totalBudgetMs === undefined ? null : performance.now() + totalBudgetMs;
   const results: T[] = [];
   const pending: number[] = [];
   for (let left = count; left > 0; left -= batchSize) pending.push(Math.min(batchSize, left));
@@ -15,6 +18,9 @@ export async function collectDistinctBatches<T>(options: {
 
   while (results.length < count) {
     if (++calls > maxCalls) throw new AiOutputError("validation", "AI could not generate enough distinct questions.", "batch_attempt_limit");
+    if (deadline !== null && performance.now() + reserveRequestMs >= deadline) {
+      throw new AiOutputError("timeout", "Quiz generation reached its safe execution budget.", "quiz_generation_budget_exhausted");
+    }
     const requested = Math.min(pending.shift() ?? batchSize, count - results.length);
     try {
       const batch = await generate(requested, results);

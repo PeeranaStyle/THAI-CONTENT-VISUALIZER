@@ -1,4 +1,4 @@
-export type AiOutputErrorCategory = "parsing" | "truncated" | "validation";
+export type AiOutputErrorCategory = "parsing" | "timeout" | "truncated" | "validation";
 
 export class AiOutputError extends Error {
   constructor(

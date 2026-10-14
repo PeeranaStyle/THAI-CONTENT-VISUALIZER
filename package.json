@@ -10,7 +10,13 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "ai:test:connection": "node scripts/ai-lab/run.mjs connection",
+    "ai:test:quiz": "node scripts/ai-lab/run.mjs quiz",
+    "ai:test:graph": "node scripts/ai-lab/run.mjs graph",
+    "ai:test:graph:markdown": "node scripts/ai-lab/run.mjs graph-markdown",
+    "ai:test:quiz:markdown": "node scripts/ai-lab/run.mjs quiz-markdown",
+    "ai:test:all": "node scripts/ai-lab/run.mjs all"
   },
   "license": "UNLICENSED",
   "dependencies": {
