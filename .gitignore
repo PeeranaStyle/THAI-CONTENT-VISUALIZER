@@ -12,5 +12,6 @@ output/playwright/
 .npm-cache/
 .playwright-cli/
 .tmp/
+.agents/
 audit-report.json
 lint-results.json
