@@ -246,8 +246,8 @@ describe("real IntelSphere integration lab (no app auth or database)", () => {
   }, 600_000);
 
   it.skipIf(!["all", "quiz"].includes(process.env.AI_LAB_OPERATION ?? "all"))("generates and validates 3, 5, 10, and 20 quiz questions from the synthetic long fixture", async () => {
-    const [{ generateQuizCore }, { readFile: readFixture }] = await Promise.all([
-      import("../../src/lib/ai/quiz-core"), import("node:fs/promises"),
+    const [{ generateQuiz }, { readFile: readFixture }] = await Promise.all([
+      import("../../src/lib/ai/quiz-generation"), import("node:fs/promises"),
     ]);
     const fixture = ["short", "medium", "long"].includes(process.env.AI_LAB_FIXTURE ?? "long") ? process.env.AI_LAB_FIXTURE ?? "long" : "long";
     const source = await readFixture(resolve(root, `scripts/ai-lab/fixtures/${fixture}.txt`), "utf8");
@@ -256,7 +256,7 @@ describe("real IntelSphere integration lab (no app auth or database)", () => {
     for (const count of counts) {
       const trace = newTrace(); trace.sourceCharacterCount = source.length;
       try {
-        const result = await generateQuizCore({ count, difficulty: "mixed", questionType: "mixed", materialTitle: "Solar energy in school", sourceText: source }, trace, model, completion);
+        const result = await generateQuiz({ count, difficulty: "mixed", questionType: "mixed", materialTitle: "Solar energy in school", sourceText: source }, trace);
         const outcome = { test: `quiz_${count}`, requestedCount: count, validCount: result.questions.length, validation: "passed", ...metrics(trace) };
         runs.push(outcome);
         await saveResult(`quiz-${count}`, { ...outcome, quiz: result.questions });
@@ -322,14 +322,14 @@ describe("real IntelSphere integration lab (no app auth or database)", () => {
   }, 90_000);
 
   it.skipIf(!["all", "graph"].includes(process.env.AI_LAB_OPERATION ?? "all"))("generates and validates a real knowledge graph from the synthetic relationships fixture", async () => {
-    const [{ generateGraphCore }, { readFile: readFixture }] = await Promise.all([
-      import("../../src/lib/ai/graph-core"), import("node:fs/promises"),
+    const [{ generateGraph }, { readFile: readFixture }] = await Promise.all([
+      import("../../src/lib/ai/graph-generation"), import("node:fs/promises"),
     ]);
     const source = await readFixture(resolve(root, "scripts/ai-lab/fixtures/relationships.txt"), "utf8");
     const trace = newTrace(); trace.sourceCharacterCount = source.length;
     const started = performance.now();
     try {
-      const result = await generateGraphCore("พลังงานและระบบนิเวศ", source, trace, model, completion);
+      const result = await generateGraph("พลังงานและระบบนิเวศ", source, trace);
       const outcome = { test: "graph_json", validation: "passed", elapsedMs: Math.round(performance.now() - started), ...metrics(trace), nodeCount: result.graph.nodes.length, edgeCount: result.graph.edges.length };
       await saveResult("graph-json", { ...outcome, graph: result.graph });
       expect(trace.upstreamHttpStatus).toBe(200);
@@ -341,13 +341,13 @@ describe("real IntelSphere integration lab (no app auth or database)", () => {
   }, 90_000);
 
   it.skipIf(!["all", "graph"].includes(process.env.AI_LAB_OPERATION ?? "all"))("generates and validates a graph from the synthetic long fixture", async () => {
-    const [{ generateGraphCore }, { readFile: readFixture }] = await Promise.all([
-      import("../../src/lib/ai/graph-core"), import("node:fs/promises"),
+    const [{ generateGraph }, { readFile: readFixture }] = await Promise.all([
+      import("../../src/lib/ai/graph-generation"), import("node:fs/promises"),
     ]);
     const source = await readFixture(resolve(root, "scripts/ai-lab/fixtures/long.txt"), "utf8");
     const trace = newTrace(); trace.operation = "graph"; trace.sourceCharacterCount = source.length;
     const started = performance.now();
-    const result = await generateGraphCore("พลังงานแสงอาทิตย์และระบบนิเวศ", source, trace, model, completion);
+    const result = await generateGraph("พลังงานแสงอาทิตย์และระบบนิเวศ", source, trace);
     const outcome = { test: "graph_long_json", validation: "passed", elapsedMs: Math.round(performance.now() - started), ...metrics(trace), nodeCount: result.graph.nodes.length, edgeCount: result.graph.edges.length };
     await saveResult("graph-long-json", { ...outcome, graph: result.graph });
     expect(trace.upstreamHttpStatus).toBe(200);

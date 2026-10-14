@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, BookOpenText, CircleHelp, FileText, LoaderCircle, Network, Sparkles, Target } from "lucide-react";
+import { quizNavigationHref } from "@/lib/ai/generation-contract";
 
 type MaterialOption = { id: string; title: string; source_type: string; created_at: string };
 
@@ -27,7 +28,7 @@ export function QuizCreateForm({ materials, initialMaterialId, initialNodeId, in
       });
       const result = await response.json();
       if (!response.ok) { setError(result?.error?.message ?? "สร้างแบบทดสอบไม่สำเร็จ"); return; }
-      router.push(`/quiz/${result.quiz.id}${result.warning ? "?partial=1" : ""}`);
+      router.push(quizNavigationHref(result));
       router.refresh();
     } catch { setError("เชื่อมต่อระบบไม่ได้ กรุณาลองอีกครั้ง"); }
     finally { setPending(false); }

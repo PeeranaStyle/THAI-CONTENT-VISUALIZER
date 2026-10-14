@@ -45,6 +45,7 @@ export async function createTracedCompletion(
     trace.upstreamContentType = result.response.headers.get("content-type");
     trace.upstreamRequestDurationMs = (trace.upstreamRequestDurationMs ?? 0) + performance.now() - startedAt;
     trace.modelId = String(completion.model || params.model);
+    trace.responseStructure = completion && typeof completion === "object" ? Object.keys(completion) : [];
     trace.finishReason = completion.choices[0]?.finish_reason ?? null;
     if (trace.finishReason) trace.finishReasons.push(trace.finishReason);
     const message = completion.choices[0]?.message as (typeof completion.choices)[number]["message"] & { reasoning?: unknown } | undefined;

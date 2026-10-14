@@ -6,6 +6,7 @@ import { env, hasIntelSphereConfig } from "@/lib/env";
 import { generateQuiz } from "@/lib/ai/quiz-generation";
 import { categorizeAiError, measureAiDatabase, withAiRequestTelemetry, type AiRequestTrace } from "@/lib/ai/telemetry";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { serializeQuizGenerationResponse } from "@/lib/ai/generation-contract";
 
 export const maxDuration = 300;
 
@@ -76,7 +77,7 @@ async function handlePost(request: Request, trace: AiRequestTrace) {
     const warning = generated.questions.length < input.data.questionCount
       ? `เนื้อหาต้นทางรองรับ ${generated.questions.length} ข้อจาก ${input.data.questionCount} ข้อที่ขอ ระบบบันทึกเฉพาะคำถามที่ผ่านการตรวจสอบ`
       : generated.rejectedCount ? `ระบบคัดคำถามที่ไม่ผ่านการตรวจสอบออก ${generated.rejectedCount} ข้อ` : null;
-    return jsonOk({ quiz, warning }, 201);
+    return jsonOk(serializeQuizGenerationResponse({ quiz, warning }), 201);
   } catch (error) {
     trace.errorCategory ??= categorizeAiError(error);
     await measureAiDatabase(trace, () => supabase.from("ai_generation_jobs").update({ status: "failed", completed_at: new Date().toISOString(), error_category: trace.errorCategory, error_message: trace.sanitizedError ?? trace.errorCategory }).eq("id", job.id).eq("user_id", user.id));

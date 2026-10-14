@@ -6,6 +6,7 @@ import { env, hasIntelSphereConfig } from "@/lib/env";
 import { generateGraph } from "@/lib/ai/graph-generation";
 import { categorizeAiError, measureAiDatabase, withAiRequestTelemetry, type AiRequestTrace } from "@/lib/ai/telemetry";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { serializeGraphGenerationResponse } from "@/lib/ai/generation-contract";
 
 const schema = z.object({ materialId: z.string().uuid(), title: z.string().trim().min(2).max(140).optional() });
 
@@ -36,7 +37,7 @@ async function handlePost(request: Request, trace: AiRequestTrace) {
     const { data: graphId, error } = await measureAiDatabase(trace, () => supabase.rpc("persist_generated_graph", { p_job_id: job.id, p_user_id: user.id, p_material_id: material.id, p_title: graphTitle, p_model: generated.model, p_graph: generated.graph }));
     if (error || !graphId) { trace.errorCategory = "persistence"; trace.sanitizedError = "graph_persist_failed"; throw new Error("Could not save the generated graph."); }
     await measureAiDatabase(trace, () => supabase.from("ai_generation_jobs").update({ input_tokens: generated.inputTokens, output_tokens: generated.outputTokens }).eq("id", job.id).eq("user_id", user.id));
-    return jsonOk({ graph: { id: graphId, title: graphTitle, nodeCount: generated.graph.nodes.length, edgeCount: generated.graph.edges.length } }, 201);
+    return jsonOk(serializeGraphGenerationResponse({ graph: { id: graphId, title: graphTitle, nodeCount: generated.graph.nodes.length, edgeCount: generated.graph.edges.length } }), 201);
   } catch (error) {
     trace.errorCategory ??= categorizeAiError(error);
     await measureAiDatabase(trace, () => supabase.from("ai_generation_jobs").update({ status: "failed", completed_at: new Date().toISOString(), error_category: trace.errorCategory, error_message: trace.sanitizedError ?? trace.errorCategory }).eq("id", job.id).eq("user_id", user.id));

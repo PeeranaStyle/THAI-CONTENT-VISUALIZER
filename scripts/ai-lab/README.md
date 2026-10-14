@@ -1,6 +1,6 @@
 # IntelSphere AI lab
 
-Run these commands from the project root. They call IntelSphere directly and do not start Next.js, authenticate to the app, or connect to Supabase.
+Run these commands from the project root. Quiz and graph integration tests invoke the same `generateQuiz` and `generateGraph` production wrappers used by their API routes; they make real IntelSphere requests, but do not start Next.js, authenticate to the app, or connect to Supabase. The direct low-level requests are limited to connection and format diagnostics.
 
 ```sh
 npm run ai:test:connection
