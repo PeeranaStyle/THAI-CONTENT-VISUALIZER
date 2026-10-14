@@ -25,7 +25,7 @@ loadLocalEnv();
 type SafeTrace = {
   requestId: string; operation: "quiz" | "graph"; startedAt: number;
   sourceCharacterCount: number | null; upstreamHttpStatus: number | null; upstreamRequestDurationMs: number | null;
-  parsingDurationMs: number | null; databaseDurationMs: number; errorCategory: string | null; sanitizedError: string | null;
+  parsingDurationMs: number | null; databaseDurationMs: number; errorCategory: string | null; sanitizedError: string | null; validationDiagnostics: string[];
   finishReason: string | null; finishReasons: string[]; inputTokens: number | null; outputTokens: number | null;
   reasoningTokens: number | null; upstreamContentType: string | null; requestedMaxTokens: number | null; batchCount: number;
   reasoningCharacterCounts: Array<number | null>; completionMessageFields: string[][];
@@ -42,7 +42,7 @@ const client = key ? new OpenAI({ baseURL, apiKey: key, timeout: 45_000, maxRetr
 
 function newTrace(): SafeTrace {
   return { requestId: crypto.randomUUID(), operation: "quiz", startedAt: performance.now(), sourceCharacterCount: null, upstreamHttpStatus: null, upstreamRequestDurationMs: null, parsingDurationMs: null,
-    databaseDurationMs: 0, errorCategory: null, sanitizedError: null, finishReason: null, finishReasons: [],
+    databaseDurationMs: 0, errorCategory: null, sanitizedError: null, validationDiagnostics: [], finishReason: null, finishReasons: [],
     inputTokens: null, outputTokens: null, totalTokens: null, reasoningTokens: null, upstreamContentType: null, requestedMaxTokens: null,
     batchCount: 0, responseStructure: [], reasoningCharacterCounts: [], completionMessageFields: [], modelQuota: null, modelId: model };
 }
@@ -271,7 +271,7 @@ describe("real IntelSphere integration lab (no app auth or database)", () => {
     expect(runs.every(run => run.validation === "passed")).toBe(true);
   }, 600_000);
 
-  it.skipIf(process.env.AI_LAB_OPERATION !== "quiz-reliability")("runs real production quiz generation for 3, 5, and 10 questions with GPT-5.6 Terra", async () => {
+  it.skipIf(process.env.AI_LAB_OPERATION !== "quiz-reliability")(`runs real production quiz generation for 3, 5, and 10 questions with ${model}`, async () => {
     const { generateQuiz } = await import("../../src/lib/ai/quiz-generation");
     const thaiLesson = `พลังงานแสงอาทิตย์เป็นพลังงานหมุนเวียนที่ได้จากแสงของดวงอาทิตย์ เซลล์แสงอาทิตย์ในแผงรับพลังงานแสงและเปลี่ยนเป็นพลังงานไฟฟ้ากระแสตรง อินเวอร์เตอร์ทำหน้าที่เปลี่ยนไฟฟ้ากระแสตรงให้เป็นไฟฟ้ากระแสสลับเพื่อให้อุปกรณ์ในบ้านใช้งานได้ แบตเตอรี่สามารถเก็บไฟฟ้าส่วนเกินที่ผลิตได้ในเวลากลางวันไว้ใช้ในเวลากลางคืน ปริมาณไฟฟ้าที่ผลิตได้ขึ้นอยู่กับความเข้มของแสง ทิศทางของแผง และเงาที่บังแผง การทำความสะอาดแผงอย่างสม่ำเสมอช่วยลดฝุ่นและรักษาประสิทธิภาพ โรงเรียนอาจติดตั้งแผงบนหลังคาเพื่อลดการใช้ไฟฟ้าจากเชื้อเพลิงฟอสซิลและใช้เป็นตัวอย่างการเรียนรู้เรื่องพลังงานสะอาด การประเมินระบบควรพิจารณาทั้งพลังงานที่ผลิตได้ ค่าใช้จ่ายในการติดตั้ง และการดูแลรักษาตลอดอายุการใช้งาน`;
     const runs: Array<Record<string, unknown>> = [];
@@ -314,7 +314,7 @@ describe("real IntelSphere integration lab (no app auth or database)", () => {
         console.info(JSON.stringify({ event: "quiz_reliability_live_test", ...outcome }));
       }
     }
-    expect(runs.map(run => run.model)).toEqual(["gpt-5.6-terra", "gpt-5.6-terra", "gpt-5.6-terra"]);
+    expect(runs.every(run => run.model === model)).toBe(true);
     expect(runs.every(run => run.success === true && run.acceptedCount === run.requestedCount)).toBe(true);
   }, 600_000);
 

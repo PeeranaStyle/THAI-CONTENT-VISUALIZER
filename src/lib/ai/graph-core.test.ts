@@ -30,7 +30,7 @@ function trace(): AiRequestTrace {
   return {
     requestId: "test", operation: "graph", modelId: "gemini-3.8-flash", sourceCharacterCount: null,
     upstreamHttpStatus: null, upstreamRequestDurationMs: null, parsingDurationMs: null, databaseDurationMs: 0,
-    errorCategory: null, sanitizedError: null, finishReason: null, finishReasons: [], inputTokens: 0,
+    errorCategory: null, sanitizedError: null, validationDiagnostics: [], finishReason: null, finishReasons: [], inputTokens: 0,
     outputTokens: 0, totalTokens: 0, reasoningTokens: null, reasoningCharacterCounts: [], completionMessageFields: [],
     responseStructure: [], upstreamContentType: null, requestedMaxTokens: null, batchCount: 0, modelQuota: null, startedAt: performance.now(),
   };

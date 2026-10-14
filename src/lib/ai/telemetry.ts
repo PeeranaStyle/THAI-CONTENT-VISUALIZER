@@ -17,6 +17,7 @@ export type AiRequestTrace = {
   databaseDurationMs: number;
   errorCategory: string | null;
   sanitizedError: string | null;
+  validationDiagnostics: string[];
   finishReason: string | null;
   finishReasons: string[];
   inputTokens: number | null;
@@ -45,6 +46,7 @@ export function createAiRequestTrace(request: Request, operation: AiOperation, m
     databaseDurationMs: 0,
     errorCategory: null,
     sanitizedError: null,
+    validationDiagnostics: [],
     finishReason: null,
     finishReasons: [],
     inputTokens: null,
@@ -137,6 +139,7 @@ export async function withAiRequestTelemetry(
     totalExecutionDurationMs: Math.round(performance.now() - trace.startedAt),
     errorCategory: trace.errorCategory,
     sanitizedError: trace.sanitizedError,
+    validationDiagnostics: trace.validationDiagnostics,
     finishReason: trace.finishReason,
     finishReasons: trace.finishReasons,
     inputTokens: trace.inputTokens,

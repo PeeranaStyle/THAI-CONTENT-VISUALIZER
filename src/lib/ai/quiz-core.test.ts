@@ -26,12 +26,21 @@ function question(stem: string, overrides: Record<string, unknown> = {}) {
 }
 
 function completion(questions: unknown[], finishReason: "stop" | "length" = "stop") {
+  const markdown = questions.map((value, index) => {
+    const item = value as Record<string, unknown>;
+    const options = Array.isArray(item.options) ? `\n\n### Options\n${item.options.map(option => {
+      const answer = option as { id?: string; text?: string };
+      return `${String(answer.id ?? "?").toUpperCase()}. ${answer.text ?? ""}`;
+    }).join("\n")}` : "";
+    const citations = Array.isArray(item.sourceReferences) ? item.sourceReferences as Array<{ quote?: string }> : [];
+    return `## QUESTION ${index + 1}\nType: ${item.type ?? "multiple_choice"}\nDifficulty: ${item.difficulty ?? "medium"}\nConcepts: ${Array.isArray(item.conceptKeys) ? item.conceptKeys.join(", ") : "concept"}\n\n### Question\n${item.question ?? ""}${options}\n\n### Answer\n${typeof item.correctAnswer === "boolean" ? String(item.correctAnswer) : String(item.correctAnswer ?? "")}\n\n### Explanation\n${item.explanation ?? ""}\n\n### Source\n${citations.map(citation => `> ${citation.quote ?? ""}`).join("\n")}`;
+  }).join("\n\n");
   return {
     id: "deterministic-test",
     object: "chat.completion",
     created: 0,
     model: "test-model",
-    choices: [{ index: 0, finish_reason: finishReason, message: { role: "assistant", content: JSON.stringify({ questions }) } }],
+    choices: [{ index: 0, finish_reason: finishReason, message: { role: "assistant", content: markdown } }],
   } as unknown as OpenAI.Chat.Completions.ChatCompletion;
 }
 
@@ -39,7 +48,7 @@ function createTrace(): AiRequestTrace {
   return {
     requestId: "deterministic-test", operation: "quiz", modelId: "test-model", sourceCharacterCount: null,
     upstreamHttpStatus: null, upstreamRequestDurationMs: null, parsingDurationMs: null, databaseDurationMs: 0,
-    errorCategory: null, sanitizedError: null, finishReason: null, finishReasons: [], inputTokens: null,
+    errorCategory: null, sanitizedError: null, validationDiagnostics: [], finishReason: null, finishReasons: [], inputTokens: null,
     outputTokens: null, totalTokens: null, reasoningTokens: null, reasoningCharacterCounts: [],
     completionMessageFields: [], responseStructure: [], upstreamContentType: null, requestedMaxTokens: null,
     batchCount: 0, modelQuota: null, startedAt: performance.now(),
@@ -106,6 +115,24 @@ describe("production quiz generation recovery", () => {
     expect(requestedCounts).toEqual([3, 2]);
     expect(trace.batchCount).toBe(2);
     expect(requests[1].messages[1]?.content).toContain(question("one accepted item").question);
+  });
+
+  it("retains a valid Markdown block and replaces only malformed blocks", async () => {
+    const requests: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming[] = [];
+    const requestedCounts: number[] = [];
+    const valid = question("one valid Markdown question");
+    const missingOptions = question("one malformed options block", { options: undefined });
+    const missingCitation = question("one malformed citation block", { sourceReferences: [] });
+    const trace = createTrace();
+    const result = await generateQuizCore(options(3), trace, "test-model", responder([
+      [valid, missingOptions, missingCitation],
+      [question("replacement first"), question("replacement second")],
+    ], requestedCounts, requests));
+    expect(result.questions).toHaveLength(3);
+    expect(result.questions[0].question).toBe(valid.question);
+    expect(result.rejectedCount).toBe(2);
+    expect(trace.validationDiagnostics).toEqual(expect.arrayContaining(["question_1_missing_or_invalid_fields_options", "question_2_missing_or_invalid_fields"]));
+    expect(requestedCounts).toEqual([3, 2]);
   });
 
   it("splits a truncated batch into smaller production requests", async () => {
