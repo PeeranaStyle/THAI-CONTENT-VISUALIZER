@@ -20,7 +20,7 @@ export async function generateGraph(title: string, sourceText: string, trace: Ai
   try {
   const choice = completion.choices[0];
   if (!choice) throw new AiOutputError("parsing", "AI response did not contain a completion choice.", "missing_choice");
-  if (choice.finish_reason === "length") throw new AiOutputError("parsing", "AI response was truncated by the output limit.", "finish_reason_length");
+  if (choice.finish_reason === "length") throw new AiOutputError("truncated", "AI response was truncated by the output limit.", "finish_reason_length");
   if (choice.finish_reason === "content_filter" || choice.message.refusal) throw new AiOutputError("validation", "AI declined or filtered the response.", "refusal_or_content_filter");
   const payload = parseCompletionJson(choice.message.content);
   const validation = validateGeneratedGraph(payload, sourceText);

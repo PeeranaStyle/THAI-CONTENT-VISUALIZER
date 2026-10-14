@@ -80,6 +80,6 @@ async function handlePost(request: Request, trace: AiRequestTrace) {
     await measureAiDatabase(trace, () => supabase.from("ai_generation_jobs").update({ status: "failed", completed_at: new Date().toISOString(), error_category: trace.errorCategory, error_message: trace.sanitizedError ?? trace.errorCategory }).eq("id", job.id).eq("user_id", user.id));
     const message = error instanceof Error ? error.message : "Quiz generation failed.";
     const status = /not configured/i.test(message) ? 503 : trace.errorCategory === "timeout" ? 504 : 502;
-    return jsonError(status === 503 ? "ยังไม่ได้ตั้งค่า KKU IntelSphere" : status === 504 ? "IntelSphere ใช้เวลาตอบกลับนานเกินกำหนด โปรดลองอีกครั้ง" : "สร้างแบบทดสอบไม่สำเร็จ ระบบไม่บันทึกคำถามที่ตรวจสอบไม่ผ่าน", status, status === 504 ? "AI_UPSTREAM_TIMEOUT" : "QUIZ_GENERATION_FAILED");
+    return jsonError(status === 503 ? "ยังไม่ได้ตั้งค่า KKU IntelSphere" : status === 504 ? "IntelSphere ใช้เวลาตอบกลับนานเกินกำหนด โปรดลองอีกครั้ง" : trace.errorCategory === "truncated" ? "ผลลัพธ์จาก AI ถูกตัดแม้แบ่งคำถามเป็นชุดย่อยแล้ว กรุณาลดจำนวนข้อหรือย่อบทเรียน" : "สร้างแบบทดสอบไม่สำเร็จ ระบบไม่บันทึกคำถามที่ตรวจสอบไม่ผ่าน", status, status === 504 ? "AI_UPSTREAM_TIMEOUT" : trace.errorCategory === "truncated" ? "AI_OUTPUT_TRUNCATED" : "QUIZ_GENERATION_FAILED");
   }
 }

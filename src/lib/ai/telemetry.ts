@@ -18,8 +18,14 @@ export type AiRequestTrace = {
   errorCategory: string | null;
   sanitizedError: string | null;
   finishReason: string | null;
+  finishReasons: string[];
   inputTokens: number | null;
   outputTokens: number | null;
+  reasoningTokens: number | null;
+  upstreamContentType: string | null;
+  requestedMaxTokens: number | null;
+  batchCount: number;
+  modelQuota: { dailyQuotaTokens: number | null; dailyUsageTokens: number | null; dailyRemainingTokens: number | null } | null;
   startedAt: number;
 };
 
@@ -36,8 +42,14 @@ export function createAiRequestTrace(request: Request, operation: AiOperation, m
     errorCategory: null,
     sanitizedError: null,
     finishReason: null,
+    finishReasons: [],
     inputTokens: null,
     outputTokens: null,
+    reasoningTokens: null,
+    upstreamContentType: null,
+    requestedMaxTokens: null,
+    batchCount: 0,
+    modelQuota: null,
     startedAt: performance.now(),
   };
 }
@@ -116,8 +128,14 @@ export async function withAiRequestTelemetry(
     errorCategory: trace.errorCategory,
     sanitizedError: trace.sanitizedError,
     finishReason: trace.finishReason,
+    finishReasons: trace.finishReasons,
     inputTokens: trace.inputTokens,
     outputTokens: trace.outputTokens,
+    reasoningTokens: trace.reasoningTokens,
+    upstreamContentType: trace.upstreamContentType,
+    requestedMaxTokens: trace.requestedMaxTokens,
+    batchCount: trace.batchCount,
+    modelQuota: trace.modelQuota,
     responseStatus: response.status,
   }));
   return response;

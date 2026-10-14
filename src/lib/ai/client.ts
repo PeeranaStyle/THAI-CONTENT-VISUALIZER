@@ -36,19 +36,34 @@ export async function createTracedCompletion(
   params: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming,
 ) {
   const startedAt = performance.now();
+  trace.requestedMaxTokens = typeof params.max_tokens === "number" ? params.max_tokens : null;
+  trace.batchCount += 1;
   try {
     const result = await withAiRetry(timeoutMs => getIntelSphereClient().chat.completions.create(params, { timeout: timeoutMs }).withResponse());
     const completion = result.data;
     trace.upstreamHttpStatus = result.response.status;
-    trace.upstreamRequestDurationMs = performance.now() - startedAt;
+    trace.upstreamContentType = result.response.headers.get("content-type");
+    trace.upstreamRequestDurationMs = (trace.upstreamRequestDurationMs ?? 0) + performance.now() - startedAt;
     trace.modelId = String(completion.model || params.model);
     trace.finishReason = completion.choices[0]?.finish_reason ?? null;
-    trace.inputTokens = completion.usage?.prompt_tokens ?? null;
-    trace.outputTokens = completion.usage?.completion_tokens ?? null;
+    if (trace.finishReason) trace.finishReasons.push(trace.finishReason);
+    if (typeof completion.usage?.prompt_tokens === "number") trace.inputTokens = (trace.inputTokens ?? 0) + completion.usage.prompt_tokens;
+    if (typeof completion.usage?.completion_tokens === "number") trace.outputTokens = (trace.outputTokens ?? 0) + completion.usage.completion_tokens;
+    const reasoningTokens = completion.usage?.completion_tokens_details?.reasoning_tokens;
+    if (typeof reasoningTokens === "number") trace.reasoningTokens = (trace.reasoningTokens ?? 0) + reasoningTokens;
+    const quota = (completion as typeof completion & { model_quota?: Record<string, unknown> }).model_quota;
+    if (quota) {
+      const safeNumber = (value: unknown) => typeof value === "number" && Number.isFinite(value) ? value : null;
+      trace.modelQuota = {
+        dailyQuotaTokens: safeNumber(quota.daily_quota_tokens),
+        dailyUsageTokens: safeNumber(quota.daily_usage_tokens),
+        dailyRemainingTokens: safeNumber(quota.daily_remaining_tokens),
+      };
+    }
     return completion;
   } catch (error) {
     trace.upstreamHttpStatus = error instanceof OpenAI.APIError ? error.status ?? null : null;
-    trace.upstreamRequestDurationMs = performance.now() - startedAt;
+    trace.upstreamRequestDurationMs = (trace.upstreamRequestDurationMs ?? 0) + performance.now() - startedAt;
     trace.sanitizedError = error instanceof OpenAI.APIError
       ? `provider_http_${error.status ?? "unknown"}`
       : error instanceof Error && /timeout|abort/i.test(`${error.name} ${error.message}`) ? "request_timeout" : "upstream_connection_error";

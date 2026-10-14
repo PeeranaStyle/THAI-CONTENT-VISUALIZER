@@ -40,6 +40,6 @@ async function handlePost(request: Request, trace: AiRequestTrace) {
   } catch (error) {
     trace.errorCategory ??= categorizeAiError(error);
     await measureAiDatabase(trace, () => supabase.from("ai_generation_jobs").update({ status: "failed", completed_at: new Date().toISOString(), error_category: trace.errorCategory, error_message: trace.sanitizedError ?? trace.errorCategory }).eq("id", job.id).eq("user_id", user.id));
-    return jsonError("สร้างแผนภาพไม่สำเร็จ ระบบไม่บันทึกข้อมูลที่ตรวจสอบไม่ผ่าน", 502, "GRAPH_GENERATION_FAILED");
+    return jsonError(trace.errorCategory === "truncated" ? "ผลลัพธ์แผนภาพถูกตัดก่อนเสร็จ กรุณาย่อบทเรียนแล้วลองอีกครั้ง" : "สร้างแผนภาพไม่สำเร็จ ระบบไม่บันทึกข้อมูลที่ตรวจสอบไม่ผ่าน", 502, trace.errorCategory === "truncated" ? "AI_OUTPUT_TRUNCATED" : "GRAPH_GENERATION_FAILED");
   }
 }
