@@ -82,6 +82,7 @@ export async function measureAiDatabase<T>(trace: AiRequestTrace, operation: () 
 
 export function categorizeAiError(error: unknown): string {
   if (error instanceof AiOutputError) return error.category;
+  if (error instanceof OpenAI.APIConnectionTimeoutError) return "timeout";
   if (error instanceof OpenAI.APIError) {
     if (error.status === 408 || error.status === 504) return "timeout";
     return "upstream";

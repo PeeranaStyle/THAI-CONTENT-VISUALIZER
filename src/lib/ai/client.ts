@@ -69,8 +69,12 @@ export async function createTracedCompletion(
   } catch (error) {
     trace.upstreamHttpStatus = error instanceof OpenAI.APIError ? error.status ?? null : null;
     trace.upstreamRequestDurationMs = (trace.upstreamRequestDurationMs ?? 0) + performance.now() - startedAt;
-    trace.sanitizedError = error instanceof OpenAI.APIError
-      ? `provider_http_${error.status ?? "unknown"}`
+    trace.sanitizedError = error instanceof OpenAI.APIConnectionTimeoutError
+      ? "request_timeout"
+      : error instanceof OpenAI.APIConnectionError
+        ? "provider_connection_error"
+        : error instanceof OpenAI.APIError
+          ? `provider_http_${error.status ?? "unknown"}`
       : error instanceof Error && /timeout|abort/i.test(`${error.name} ${error.message}`) ? "request_timeout" : "upstream_connection_error";
     throw error;
   }
