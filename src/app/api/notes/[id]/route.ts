@@ -1,0 +1,6 @@
+import { jsonError, jsonOk } from "@/lib/api";
+import { getCurrentUser } from "@/lib/auth/session";
+import { isSameOrigin } from "@/lib/auth/security";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
+export async function GET(_r:Request,{params}:{params:Promise<{id:string}>}) { const user=await getCurrentUser();if(!user)return jsonError("กรุณาเข้าสู่ระบบ",401,"UNAUTHENTICATED");const {id}=await params;const {data,error}=await getSupabaseAdmin().from("generated_notes").select("id,title,content,material_id,created_at,learning_materials(title)").eq("id",id).eq("user_id",user.id).maybeSingle();if(error)return jsonError("โหลดสรุปไม่สำเร็จ",503,"NOTE_UNAVAILABLE");if(!data)return jsonError("ไม่พบสรุปนี้",404,"NOTE_NOT_FOUND");return jsonOk({note:data}); }
+export async function DELETE(r:Request,{params}:{params:Promise<{id:string}>}) { if(!isSameOrigin(r))return jsonError("คำขอนี้ไม่ปลอดภัย",403,"ORIGIN_REJECTED");const user=await getCurrentUser();if(!user)return jsonError("กรุณาเข้าสู่ระบบ",401,"UNAUTHENTICATED");const {id}=await params;const {data,error}=await getSupabaseAdmin().from("generated_notes").delete().eq("id",id).eq("user_id",user.id).select("id").maybeSingle();if(error)return jsonError("ลบสรุปไม่สำเร็จ",503,"NOTE_DELETE_FAILED");if(!data)return jsonError("ไม่พบสรุปนี้",404,"NOTE_NOT_FOUND");return jsonOk({deleted:true}); }

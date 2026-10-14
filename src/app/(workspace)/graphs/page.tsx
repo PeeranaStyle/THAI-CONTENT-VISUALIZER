@@ -1,0 +1,20 @@
+﻿import Link from "next/link";
+import { Network, ArrowUpRight } from "lucide-react";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { GenerateGraphButton } from "@/components/generate-graph-button";
+import { relationOne } from "@/lib/relations";
+
+export default async function GraphsPage() {
+  const user = await getCurrentUser();
+  const db = getSupabaseAdmin();
+  const [{ data: graphs, error: graphError }, { data: materials, error: materialError }] = await Promise.all([
+    db.from("knowledge_graphs").select("id,title,material_id,created_at,learning_materials(title),graph_nodes(id)").eq("user_id", user!.id).order("created_at", { ascending: false }),
+    db.from("learning_materials").select("id,title").eq("user_id", user!.id).order("created_at", { ascending: false }),
+  ]);
+  if (graphError || materialError) throw new Error("Could not load knowledge graphs.");
+  return <div className="mx-auto max-w-[1120px]"><p className="eyebrow">CONCEPT CONNECTIONS</p><h2 className="page-title mt-1">เนเธเธเธ เธฒเธเธเธงเธฒเธกเธฃเธนเน</h2><p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--text-soft)]">เธกเธญเธเน€เธซเนเธเนเธเธงเธเธดเธ”เธชเธณเธเธฑเธเนเธฅเธฐเธเธงเธฒเธกเธชเธฑเธกเธเธฑเธเธเนเธเธฒเธเธเธ—เน€เธฃเธตเธขเธเธเธญเธเธเธธเธ“ เธ—เธธเธเนเธเธงเธเธดเธ”เธกเธตเธเนเธญเธเธงเธฒเธกเธญเนเธฒเธเธญเธดเธเธเธฅเธฑเธเนเธเธขเธฑเธเน€เธเธทเนเธญเธซเธฒเธ•เนเธเธ—เธฒเธ</p>
+    <section className="mt-6 rounded-[22px] border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-6"><h3 className="text-sm font-semibold">เธชเธฃเนเธฒเธเนเธเธเธ เธฒเธเธเธฒเธเธเธ—เน€เธฃเธตเธขเธ</h3>{materials?.length ? <div className="mt-4 grid gap-3 sm:grid-cols-2">{materials.map(m=><article key={m.id} className="flex items-center gap-3 rounded-2xl border border-[var(--line)] p-4"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--mist)] text-[var(--signal)]"><Network className="size-5"/></span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{m.title}</p><p className="text-xs text-[var(--text-soft)]">เธชเธฃเนเธฒเธเนเธเธเธ เธฒเธเนเธเธงเธเธดเธ”เธเธฒเธเน€เธเธทเนเธญเธซเธฒเธเธตเน</p></div><GenerateGraphButton materialId={m.id}/></article>)}</div> : <p className="mt-3 text-sm text-[var(--text-soft)]">เน€เธเธดเนเธกเธเธ—เน€เธฃเธตเธขเธเธเนเธญเธ เนเธฅเนเธงเธเธถเธเธชเธฃเนเธฒเธเนเธเธเธ เธฒเธเนเธ”เน</p>}</section>
+    <section className="mt-8"><div className="flex items-center justify-between"><h3 className="text-base font-semibold">แผนภาพที่บันทึกไว้</h3><span className="text-xs text-[var(--text-soft)]">{graphs?.length ?? 0} รายการ</span></div>{graphs?.length ? <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{graphs.map(g=><Link key={g.id} href={`/graphs/${g.id}`} className="group rounded-[20px] border border-[var(--line)] bg-[var(--surface)] p-5 transition hover:-translate-y-0.5 hover:shadow-md"><div className="flex items-start justify-between"><span className="grid size-10 place-items-center rounded-[14px] bg-[var(--mist)] text-[var(--signal)]"><Network className="size-5"/></span><ArrowUpRight className="size-4 text-[var(--text-soft)] transition group-hover:text-[var(--signal)]"/></div><h4 className="mt-4 line-clamp-2 text-sm font-bold">{g.title}</h4><p className="mt-1 truncate text-xs text-[var(--text-soft)]">{relationOne(g.learning_materials)?.title}</p><p className="mt-4 text-[11px] text-[var(--text-soft)]">{g.graph_nodes?.length ?? 0} แนวคิด · {new Intl.DateTimeFormat("th-TH",{dateStyle:"medium"}).format(new Date(g.created_at))}</p></Link>)}</div> : <div className="mt-4 rounded-[20px] border border-dashed border-[var(--line)] p-8 text-center"><Network className="mx-auto size-8 text-[var(--text-soft)]"/><p className="mt-3 text-sm font-semibold">ยังไม่มีแผนภาพ</p><p className="mt-1 text-xs text-[var(--text-soft)]">เลือกบทเรียนด้านบนเพื่อเริ่มเชื่อมโยงแนวคิด</p></div>}</section>
+  </div>;
+}

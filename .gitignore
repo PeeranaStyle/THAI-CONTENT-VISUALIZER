@@ -1,0 +1,16 @@
+node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+.env*
+!.env.example
+*.tsbuildinfo
+supabase/.temp/
+output/playwright/
+.npm-cache/
+.playwright-cli/
+.tmp/
+audit-report.json
+lint-results.json
