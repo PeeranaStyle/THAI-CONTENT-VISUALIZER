@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { CanvasFactory } from "pdf-parse/worker";
 import { PDFParse } from "pdf-parse";
 import { jsonError, jsonOk } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
   if (bytes.subarray(0, 5).toString("ascii") !== "%PDF-") return jsonError("ไฟล์นี้ไม่มีรูปแบบ PDF ที่ถูกต้อง", 415, "PDF_HEADER_INVALID");
 
   let extractedText = "";
-  const parser = new PDFParse({ data: bytes });
+  const parser = new PDFParse({ data: bytes, CanvasFactory });
   try { extractedText = (await parser.getText()).text.trim(); }
   catch { return jsonError("อ่านเนื้อหาในไฟล์ PDF ไม่ได้ ลองตรวจสอบว่าไฟล์ไม่เสียหาย", 422, "PDF_PARSE_FAILED"); }
   finally { await parser.destroy().catch(() => undefined); }
@@ -31,6 +32,11 @@ export async function POST(request: Request) {
   if (extractedText.length > 150_000) extractedText = extractedText.slice(0, 150_000);
 
   const supabase = getSupabaseAdmin();
+  const { data: buckets, error: bucketLookupError } = await supabase.storage.listBuckets();
+  if (bucketLookupError) return jsonError("ตรวจสอบพื้นที่จัดเก็บไฟล์ไม่สำเร็จ กรุณาตรวจสอบการตั้งค่า Supabase", 503, "STORAGE_BUCKET_CHECK_FAILED");
+  if (!buckets.some(bucket => bucket.name === "learning-materials")) {
+    return jsonError("ยังไม่มีพื้นที่จัดเก็บ learning-materials กรุณาสร้าง bucket นี้เป็น Private และใช้ migration ปัจจุบัน", 503, "STORAGE_BUCKET_MISSING");
+  }
   const materialId = randomUUID();
   const fileId = randomUUID();
   const storagePath = `users/${user.id}/materials/${materialId}/${fileId}.pdf`;

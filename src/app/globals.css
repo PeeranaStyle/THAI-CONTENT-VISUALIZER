@@ -1,6 +1,30 @@
 @import "tailwindcss";
 @import "@fontsource-variable/noto-sans-thai";
 
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+}
+
 :root {
   color-scheme: light;
   --ink: #18344b;
@@ -30,6 +54,27 @@
   --accent-gold: #8b6240;
   --shadow: 0 16px 40px rgba(24, 52, 75, .08);
   --radius-card: 20px;
+  --background: #f3f6f7;
+  --foreground: #263a49;
+  --card: #ffffff;
+  --card-foreground: #263a49;
+  --primary: #315fc2;
+  --primary-foreground: #ffffff;
+  --secondary: #e8f0f5;
+  --secondary-foreground: #18344b;
+  --muted: #edf2f4;
+  --muted-foreground: #5c6e7b;
+  --accent: #e8f0f5;
+  --accent-foreground: #18344b;
+  --border: #d8e1e6;
+  --input: #d8e1e6;
+  --ring: #315fc2;
+  --sidebar: #142b3e;
+  --sidebar-foreground: #e0e9ef;
+  --sidebar-primary: #85a9f5;
+  --sidebar-primary-foreground: #102b3d;
+  --sidebar-accent: #28465b;
+  --sidebar-accent-foreground: #ffffff;
 }
 
 * { box-sizing: border-box; }
@@ -107,6 +152,21 @@ html[data-theme="dark"] {
   --accent-gold-bg: #4b3b2c;
   --accent-gold: #e6bf91;
   --shadow: 0 18px 48px rgba(0, 0, 0, .24);
+  --background: #101d29;
+  --foreground: #e0e9ef;
+  --card: #192d3c;
+  --card-foreground: #e0e9ef;
+  --primary: #85a9f5;
+  --primary-foreground: #102b3d;
+  --secondary: #20394b;
+  --secondary-foreground: #e0e9ef;
+  --muted: #213746;
+  --muted-foreground: #afbdc7;
+  --accent: #28465b;
+  --accent-foreground: #ffffff;
+  --border: #344c5d;
+  --input: #344c5d;
+  --ring: #85a9f5;
 }
 html[data-theme="dark"] .app-canvas { background-image: radial-gradient(ellipse at 84% 0%, rgba(45,84,111,.24), transparent 36rem); }
 html[data-theme="dark"] .form-input { background: #152634; }
@@ -114,3 +174,6 @@ html[data-theme="dark"] .form-input::placeholder { color: #91a4b2; }
 html[data-theme="dark"] .quiet-grid {
   background-image: linear-gradient(rgba(193,216,231,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(193,216,231,.07) 1px, transparent 1px);
 }
+
+.sidebar-nav { scrollbar-width: none; overscroll-behavior: contain; }
+.sidebar-nav::-webkit-scrollbar { display: none; }

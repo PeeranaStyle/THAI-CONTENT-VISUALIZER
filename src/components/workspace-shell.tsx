@@ -41,13 +41,13 @@ export function WorkspaceShell({ user, children }: { user: CurrentUser; children
   const initials = user.displayName.trim().split(/\s+/).slice(0, 2).map(part => part[0]).join("").toLocaleUpperCase("th-TH");
 
   return <div className="app-canvas min-h-screen">
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col bg-[var(--ink-deep)] px-4 pb-4 pt-5 text-white lg:flex">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col bg-sidebar px-4 pb-4 pt-5 text-sidebar-foreground lg:flex">
       <div className="px-2"><Brand light /></div>
       <div className="mt-8 rounded-[17px] border border-white/10 bg-white/[.07] p-3.5">
         <p className="text-[10px] font-semibold tracking-[.12em] text-white/45">YOUR LEARNING SPACE</p>
         <div className="mt-2 flex items-center gap-3"><span className="grid size-9 place-items-center rounded-xl bg-[#a7c9b0]/20 text-[#c5e1ca]"><GraduationCap className="size-[17px]" /></span><span className="min-w-0"><span className="block truncate text-[13px] font-semibold">พื้นที่ส่วนตัว</span><span className="block text-[10px] text-white/50">เรียนในจังหวะของคุณ</span></span><ChevronDown className="ml-auto size-3.5 text-white/45" /></div>
       </div>
-      <nav aria-label="เมนูพื้นที่เรียนรู้" className="mt-7 flex-1 overflow-y-auto">
+      <nav aria-label="เมนูพื้นที่เรียนรู้" className="sidebar-nav mt-7 min-h-0 flex-1 overflow-y-auto">
         <p className="mb-2 px-3 text-[10px] font-semibold tracking-[.13em] text-white/40">เรียนรู้</p>
         <ul className="space-y-1">{primaryNav.map(item => <NavItem key={item.href} item={item} pathname={pathname} />)}</ul>
         <p className="mb-2 mt-7 px-3 text-[10px] font-semibold tracking-[.13em] text-white/40">ติดตามความก้าวหน้า</p>
@@ -57,9 +57,9 @@ export function WorkspaceShell({ user, children }: { user: CurrentUser; children
         <div className="flex items-center justify-between"><span className="text-[11px] font-medium text-white/75">เส้นทางแนวคิด</span><Activity className="size-3.5 text-[#c5e1ca]" /></div>
         <div className="mt-2 h-[62px] overflow-hidden rounded-xl bg-white/[.06]"><PathwayArtwork compact /></div>
       </div>
-      <Link href="/settings" className={`flex min-h-10 items-center gap-3 rounded-xl px-3 text-[12px] font-medium transition ${pathname === "/settings" ? "bg-white/15 text-white" : "text-white/60 hover:bg-white/10 hover:text-white"}`}><Settings2 className="size-4" />ตั้งค่า</Link>
+      <Link href="/settings" aria-current={pathname === "/settings" ? "page" : undefined} className={`flex min-h-10 items-center gap-3 rounded-xl px-3 text-[12px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-primary ${pathname === "/settings" ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/75 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"}`}><Settings2 className="size-4" />ตั้งค่า</Link>
       <div className="mt-3 flex items-center gap-2 border-t border-white/10 pt-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--mist-strong)] text-[12px] font-bold text-[var(--ink)]">{initials || "M"}</span>
+        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-sidebar-accent text-[12px] font-bold text-sidebar-accent-foreground">{initials || "M"}</span>
         <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-semibold">{user.displayName}</span><span className="block truncate text-[10px] text-white/45">@{user.username}</span></span>
         <LogoutButton compact />
       </div>
@@ -89,5 +89,5 @@ export function WorkspaceShell({ user, children }: { user: CurrentUser; children
 function NavItem({ item, pathname }: { item: typeof primaryNav[number] | typeof progressNav[number]; pathname: string }) {
   const active = pathname === item.href || (item.href !== "/dashboard" && item.href !== "/quiz/create" && pathname.startsWith(`${item.href}/`));
   const Icon = item.icon;
-  return <li><Link href={item.href} aria-current={active ? "page" : undefined} className={`group flex min-h-10 items-center gap-3 rounded-xl px-3 text-[12px] font-medium transition ${active ? "bg-white text-[var(--ink)] shadow-sm" : "text-white/65 hover:bg-white/10 hover:text-white"}`}><Icon className={`size-[17px] ${active ? "text-[var(--signal)]" : "text-white/55 group-hover:text-white"}`} />{item.label}</Link></li>;
+  return <li><Link href={item.href} aria-current={active ? "page" : undefined} className={`group flex min-h-10 items-center gap-3 rounded-xl border-l-2 px-3 text-[12px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-primary ${active ? "border-sidebar-primary bg-sidebar-accent text-sidebar-accent-foreground shadow-sm" : "border-transparent text-sidebar-foreground/75 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"}`}><Icon aria-hidden="true" className={`size-[17px] ${active ? "text-sidebar-primary" : "text-sidebar-foreground/65 group-hover:text-sidebar-foreground"}`} />{item.label}</Link></li>;
 }
