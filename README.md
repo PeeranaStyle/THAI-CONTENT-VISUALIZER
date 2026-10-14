@@ -1,6 +1,6 @@
-# Thai Content Visualizer
+# MindMap AI
 
-Learnloom is a Thai-first learning workspace for private lesson materials, AI-generated quizzes, cited knowledge graphs, and saved study notes. The application uses the project name **Thai Content Visualizer** in its database and package metadata.
+MindMap AI is a Thai-language learning workspace for private lesson materials, AI-generated quizzes, cited knowledge graphs, and saved study notes. The database and package retain the technical project identifier **Thai Content Visualizer**.
 
 ## Stack
 

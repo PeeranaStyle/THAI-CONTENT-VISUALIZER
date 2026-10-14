@@ -48,7 +48,7 @@ export function AuthForm({ mode, configured }: { mode: "login" | "register"; con
       {isRegister && <label className="block space-y-1.5"><span className="text-[13px] font-semibold text-[var(--ink)]">ยืนยันรหัสผ่าน</span><input name="confirmPassword" type={showPassword ? "text" : "password"} autoComplete="new-password" required minLength={12} maxLength={128} className="form-input" placeholder="พิมพ์รหัสผ่านอีกครั้ง" /></label>}
       {message && <p role="alert" className="rounded-xl border border-[#f0d2cc] bg-[#fff5f2] px-4 py-3 text-[13px] leading-6 text-[#98483d]">{message}</p>}
       {success && <p role="status" className="text-sm text-[var(--success)]">สำเร็จ กำลังพาคุณไปยังพื้นที่เรียนรู้…</p>}
-      <button type="submit" disabled={pending || !configured} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[var(--signal)] px-5 text-sm font-bold text-white shadow-[0_9px_18px_rgba(60,107,206,.18)] transition hover:bg-[var(--signal-hover)] disabled:cursor-not-allowed disabled:opacity-60">
+      <button type="submit" disabled={pending || !configured} className="primary-action inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[var(--signal)] px-5 text-sm font-bold text-white shadow-[0_9px_18px_rgba(60,107,206,.18)] transition hover:bg-[var(--signal-hover)] disabled:cursor-not-allowed disabled:opacity-60">
         {pending && <LoaderCircle className="size-4 animate-spin" />}{pending ? "กำลังตรวจสอบ…" : isRegister ? "สร้างพื้นที่เรียนรู้" : "เข้าสู่พื้นที่ของฉัน"}
       </button>
       <p className="pt-1 text-center text-[13px] text-[var(--text-soft)]">

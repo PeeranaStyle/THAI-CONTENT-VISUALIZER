@@ -3,7 +3,7 @@ import { ArrowUpRight } from "lucide-react";
 
 export function Brand({ light = false }: { light?: boolean }) {
   return (
-    <Link href="/" className={`inline-flex items-center gap-3 ${light ? "text-white" : "text-[var(--ink)]"}`} aria-label="Learnloom หน้าหลัก">
+    <Link href="/" className={`inline-flex items-center gap-2.5 sm:gap-3 ${light ? "text-white" : "text-[var(--ink)]"}`} aria-label="MindMap AI หน้าหลัก">
       <span className="relative grid size-11 place-items-center rounded-[15px] bg-[var(--signal)] shadow-[0_8px_18px_rgba(60,107,206,.25)]">
         <svg viewBox="0 0 44 44" fill="none" className="size-7" aria-hidden="true">
           <path d="M9 12.5h10.5M19.5 12.5v10M19.5 22.5h11M19.5 22.5v10M30.5 22.5V12" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
@@ -15,8 +15,8 @@ export function Brand({ light = false }: { light?: boolean }) {
         </svg>
       </span>
       <span className="leading-tight">
-        <span className="block text-[18px] font-bold tracking-[-.04em]">learnloom</span>
-        <span className={`block text-[10px] font-medium tracking-[.12em] ${light ? "text-white/55" : "text-[var(--text-soft)]"}`}>THAI LEARNING STUDIO</span>
+        <span className="block whitespace-nowrap text-[16px] font-bold tracking-[-.04em] sm:text-[18px]" translate="no">MindMap AI</span>
+        <span className={`hidden text-[10px] font-medium sm:block ${light ? "text-white/65" : "text-[var(--text-soft)]"}`}>เรียนรู้ผ่านการเชื่อมโยง</span>
       </span>
     </Link>
   );
@@ -26,7 +26,7 @@ export function PathwayArtwork({ compact = false }: { compact?: boolean }) {
   return (
     <div className={`relative overflow-hidden rounded-[26px] border border-[var(--line)] bg-[var(--paper)] ${compact ? "min-h-[190px]" : "min-h-[280px]"}`}>
       <div className="quiet-grid absolute inset-0 opacity-50" />
-      <div className="absolute left-5 top-5 z-10 text-[11px] font-semibold tracking-[.08em] text-[var(--text-soft)]">แนวคิดเชื่อมโยง</div>
+      <div className="absolute left-5 top-5 z-10 text-[11px] font-semibold text-[var(--text-soft)]">แผนภาพความรู้</div>
       <svg viewBox="0 0 480 250" className="absolute inset-0 h-full w-full" role="img" aria-label="ตัวอย่างเส้นทางเชื่อมโยงจากบทเรียนสู่แนวคิดและแบบทดสอบ">
         <defs>
           <filter id="node-shadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="8" stdDeviation="8" floodColor="#193b59" floodOpacity=".10" /></filter>

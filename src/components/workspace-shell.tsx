@@ -59,7 +59,7 @@ export function WorkspaceShell({ user, children }: { user: CurrentUser; children
       </div>
       <Link href="/settings" className={`flex min-h-10 items-center gap-3 rounded-xl px-3 text-[12px] font-medium transition ${pathname === "/settings" ? "bg-white/15 text-white" : "text-white/60 hover:bg-white/10 hover:text-white"}`}><Settings2 className="size-4" />ตั้งค่า</Link>
       <div className="mt-3 flex items-center gap-2 border-t border-white/10 pt-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#dcebf3] text-[12px] font-bold text-[var(--ink)]">{initials || "L"}</span>
+        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--mist-strong)] text-[12px] font-bold text-[var(--ink)]">{initials || "M"}</span>
         <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-semibold">{user.displayName}</span><span className="block truncate text-[10px] text-white/45">@{user.username}</span></span>
         <LogoutButton compact />
       </div>
@@ -67,21 +67,21 @@ export function WorkspaceShell({ user, children }: { user: CurrentUser; children
 
     <div className="min-h-screen lg:pl-[248px]">
       <header className="sticky top-0 z-20 flex h-[66px] items-center justify-between border-b border-[var(--line)] bg-[var(--chalk)]/90 px-4 backdrop-blur-md sm:px-7 lg:px-10">
-        <div><p className="text-[10px] font-medium text-[var(--text-soft)]">LEARNING STUDIO <span className="px-1 text-[var(--line)]">/</span></p><h1 className="text-[13px] font-semibold leading-5 text-[var(--ink)]">{title}</h1></div>
+        <div><p className="text-[10px] font-medium text-[var(--text-soft)]"><span translate="no">MindMap AI</span> <span className="px-1 text-[var(--line)]">/</span></p><h1 className="text-[13px] font-semibold leading-5 text-[var(--ink)]">{title}</h1></div>
         <div className="flex items-center gap-2.5">
           <span className="hidden text-[11px] text-[var(--text-soft)] sm:inline">ยินดีต้อนรับ, <strong className="font-semibold text-[var(--ink)]">{user.displayName}</strong></span>
-          <ThemeToggle />
-          <button type="button" onClick={() => setMenuOpen(value => !value)} aria-label="เปิดเมนูบัญชี" aria-expanded={menuOpen} className="grid size-10 place-items-center rounded-full bg-[var(--mist)] text-[12px] font-bold text-[var(--ink)] lg:hidden">{initials || "L"}</button>
+          <ThemeToggle persist />
+          <button type="button" onClick={() => setMenuOpen(value => !value)} aria-label="เปิดเมนูบัญชี" aria-expanded={menuOpen} className="grid size-10 place-items-center rounded-full bg-[var(--mist)] text-[12px] font-bold text-[var(--ink)] lg:hidden">{initials || "M"}</button>
         </div>
         {menuOpen && <div className="absolute right-4 top-[58px] z-40 min-w-48 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-2 shadow-[var(--shadow)] lg:hidden"><Link href="/profile" className="block rounded-xl px-3 py-2 text-sm hover:bg-[var(--surface-muted)]">บัญชีของฉัน</Link><Link href="/settings" className="block rounded-xl px-3 py-2 text-sm hover:bg-[var(--surface-muted)]">ตั้งค่า</Link><div className="my-1 border-t border-[var(--line)]" /><LogoutButton /></div>}
       </header>
-      <main id="main-content" className="mx-auto min-h-[calc(100vh-66px)] max-w-[1600px] px-4 pb-24 pt-6 sm:px-7 sm:pt-8 lg:px-10 lg:pb-12">
+      <main id="main-content" className="workspace-main mx-auto min-h-[calc(100vh-66px)] max-w-[1600px] px-4 pb-24 pt-6 sm:px-7 sm:pt-8 lg:px-10 lg:pb-12">
         {children}
       </main>
     </div>
 
     <nav aria-label="เมนูหลักบนมือถือ" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-[var(--line)] bg-[var(--surface)]/95 px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-md lg:hidden">
-      {mobileNav.map(item => { const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`)); const Icon = item.icon; return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={`flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-[9px] font-medium transition ${active ? "text-[var(--signal)]" : "text-[var(--text-soft)]"}`}><span className={`grid size-7 place-items-center rounded-lg ${active ? "bg-[#edf2fc]" : ""}`}><Icon className="size-[17px]" /></span>{item.label}</Link>; })}
+      {mobileNav.map(item => { const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`)); const Icon = item.icon; return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={`flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-[9px] font-medium transition ${active ? "text-[var(--signal)]" : "text-[var(--text-soft)]"}`}><span className={`grid size-7 place-items-center rounded-lg ${active ? "bg-[var(--mist)]" : ""}`}><Icon className="size-[17px]" /></span>{item.label}</Link>; })}
     </nav>
   </div>;
 }

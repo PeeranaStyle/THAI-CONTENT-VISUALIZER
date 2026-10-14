@@ -53,7 +53,7 @@ export function MaterialForm() {
         {message && <p role="alert" className="mt-4 rounded-xl border border-[#f0d2cc] bg-[#fff5f2] px-4 py-3 text-[12px] leading-6 text-[#98483d]">{message}</p>}
         <div className="mt-6 flex flex-col-reverse items-stretch justify-between gap-3 border-t border-[var(--line)] pt-5 sm:flex-row sm:items-center">
           <span className="inline-flex items-center gap-1.5 text-[10px] text-[var(--text-soft)]"><ShieldCheck className="size-3.5 text-[var(--success)]" />ข้อมูลนี้มองเห็นได้เฉพาะคุณ</span>
-          <button type="submit" disabled={pending || (tab === "text" ? text.trim().length < 40 : !file)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--signal)] px-4 text-[12px] font-semibold text-white transition hover:bg-[var(--signal-hover)] disabled:cursor-not-allowed disabled:opacity-50">{pending ? <><LoaderCircle className="size-4 animate-spin" />กำลังบันทึก…</> : <>บันทึกบทเรียน <ArrowRight className="size-3.5" /></>}</button>
+          <button type="submit" disabled={pending || (tab === "text" ? text.trim().length < 40 : !file)} className="primary-action inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--signal)] px-4 text-[12px] font-semibold text-white transition hover:bg-[var(--signal-hover)] disabled:cursor-not-allowed disabled:opacity-50">{pending ? <><LoaderCircle className="size-4 animate-spin" />กำลังบันทึก…</> : <>บันทึกบทเรียน <ArrowRight className="size-3.5" /></>}</button>
         </div>
       </form>
       <aside className="h-fit rounded-[22px] border border-[var(--line)] bg-[#edf4f5] p-5">

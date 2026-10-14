@@ -13,7 +13,7 @@ function subscribe(callback: () => void) {
 function getSnapshot(): Theme { return document.documentElement.dataset.theme === "dark" ? "dark" : "light"; }
 function getServerSnapshot(): Theme { return "light"; }
 
-export function ThemeToggle({ className = "" }: { className?: string }) {
+export function ThemeToggle({ className = "", persist = false }: { className?: string; persist?: boolean }) {
   const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
@@ -24,7 +24,9 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     const next: Theme = theme === "light" ? "dark" : "light";
     document.documentElement.dataset.theme = next;
     window.localStorage.setItem(STORAGE_KEY, next);
-    void fetch("/api/settings/theme", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ theme: next }) });
+    if (persist) {
+      void fetch("/api/settings/theme", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ theme: next }) });
+    }
   }
   return (
     <button type="button" onClick={toggle} className={`inline-flex size-10 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] transition hover:bg-[var(--mist)] ${className}`} aria-label={theme === "light" ? "เปลี่ยนเป็นโหมดกลางคืน" : "เปลี่ยนเป็นโหมดกลางวัน"} title={theme === "light" ? "โหมดกลางคืน" : "โหมดกลางวัน"}>

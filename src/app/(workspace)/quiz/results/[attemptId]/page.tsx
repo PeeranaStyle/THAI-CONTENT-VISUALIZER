@@ -1,9 +1,12 @@
 import { notFound, redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { QuizResults } from "@/components/quiz-results";
 
 type Props = { params: Promise<{ attemptId: string }> };
+
+export const metadata: Metadata = { title: "Assessment Results" };
 
 export default async function QuizResultsPage({ params }: Props) {
   const user = await getCurrentUser();
