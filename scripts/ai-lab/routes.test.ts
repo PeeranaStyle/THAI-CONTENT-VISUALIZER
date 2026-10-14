@@ -27,7 +27,7 @@ const ids = {
 const lesson = `Solar energy is renewable energy from sunlight. Solar panels contain photovoltaic cells that convert light into electricity. The inverter changes direct current into alternating current for household use. A battery stores extra electricity for use at night or during cloudy weather. The amount of energy produced depends on sunlight, panel direction, and shade. Regular cleaning helps panels work efficiently. Schools can use solar power to reduce electricity from fossil fuels and learn about sustainable energy.`;
 
 function createMemorySupabase() {
-  const state = { jobs: [] as Array<Record<string, unknown>>, persistedGraph: null as Record<string, unknown> | null, persistedQuiz: null as unknown };
+  const state = { jobs: [] as Array<Record<string, unknown>>, jobUpdates: [] as Array<Record<string, unknown>>, persistedGraph: null as Record<string, unknown> | null, persistedQuiz: null as unknown };
   function result(data: unknown) { return Promise.resolve({ data, error: null }); }
   function builder(table: string) {
     let inserted: Record<string, unknown> | null = null;
@@ -41,7 +41,7 @@ function createMemorySupabase() {
         return result({ id: ids.job });
       },
       insert: (row: Record<string, unknown>) => { inserted = row; return query; },
-      update: () => query,
+      update: (row: Record<string, unknown>) => { state.jobUpdates.push(row); return query; },
       then: (resolvePromise: (value: unknown) => unknown, rejectPromise: (reason: unknown) => unknown) => result(null).then(resolvePromise, rejectPromise),
     };
     return query;
@@ -129,6 +129,31 @@ describe("production AI API route integration (in-memory persistence; real Intel
     expect(invalid.status).toBe(400);
     expect((await invalid.json()).error.code).toBe("INVALID_INPUT");
     expect(memory.state.jobs).toHaveLength(0);
+  }, 30_000);
+
+  it.skipIf(process.env.AI_LAB_OPERATION !== "routes")("does not persist a quiz after generation fails completeness validation", async () => {
+    const memory = createMemorySupabase();
+    vi.resetModules();
+    vi.doMock("@/lib/auth/session", () => ({ getCurrentUser: async () => ({ id: ids.user }) }));
+    vi.doMock("@/lib/supabase/admin", () => ({ getSupabaseAdmin: () => memory.client }));
+    vi.doMock("@/lib/ai/quiz-generation", () => ({
+      generateQuiz: async (_options: unknown, trace: { errorCategory: string | null; sanitizedError: string | null }) => {
+        trace.errorCategory = "validation";
+        trace.sanitizedError = "quiz_incomplete_1_of_5;requests_5;replacement_rounds_4";
+        throw Object.assign(new Error("Quiz generation could not produce the requested number of valid questions."), { category: "validation" });
+      },
+    }));
+    const { POST } = await import("../../src/app/api/ai/generate-quiz/route");
+    const response = await POST(new Request("http://localhost/api/ai/generate-quiz", {
+      method: "POST", headers: { origin: "http://localhost", "content-type": "application/json" },
+      body: JSON.stringify({ materialId: ids.material, questionCount: 5, difficulty: "mixed", questionType: "mixed" }),
+    }));
+    const body = await response.json();
+
+    expect(response.status).toBe(502);
+    expect(body.error.code).toBe("QUIZ_GENERATION_FAILED");
+    expect(memory.state.persistedQuiz).toBeNull();
+    expect(memory.state.jobUpdates).toContainEqual(expect.objectContaining({ status: "failed", error_category: "validation" }));
   }, 30_000);
 });
 

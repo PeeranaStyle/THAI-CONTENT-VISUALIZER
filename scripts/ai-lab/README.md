@@ -5,6 +5,7 @@ Run these commands from the project root. Quiz and graph integration tests invok
 ```sh
 npm run ai:test:connection
 npm run ai:test:quiz
+npm run ai:test:quiz:reliability
 npm run ai:test:graph
 npm run ai:test:graph:markdown
 npm run ai:test:quiz:markdown

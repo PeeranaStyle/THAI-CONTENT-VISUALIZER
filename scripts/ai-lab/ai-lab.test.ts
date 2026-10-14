@@ -271,6 +271,53 @@ describe("real IntelSphere integration lab (no app auth or database)", () => {
     expect(runs.every(run => run.validation === "passed")).toBe(true);
   }, 600_000);
 
+  it.skipIf(process.env.AI_LAB_OPERATION !== "quiz-reliability")("runs real production quiz generation for 3, 5, and 10 questions with GPT-5.6 Terra", async () => {
+    const { generateQuiz } = await import("../../src/lib/ai/quiz-generation");
+    const thaiLesson = `พลังงานแสงอาทิตย์เป็นพลังงานหมุนเวียนที่ได้จากแสงของดวงอาทิตย์ เซลล์แสงอาทิตย์ในแผงรับพลังงานแสงและเปลี่ยนเป็นพลังงานไฟฟ้ากระแสตรง อินเวอร์เตอร์ทำหน้าที่เปลี่ยนไฟฟ้ากระแสตรงให้เป็นไฟฟ้ากระแสสลับเพื่อให้อุปกรณ์ในบ้านใช้งานได้ แบตเตอรี่สามารถเก็บไฟฟ้าส่วนเกินที่ผลิตได้ในเวลากลางวันไว้ใช้ในเวลากลางคืน ปริมาณไฟฟ้าที่ผลิตได้ขึ้นอยู่กับความเข้มของแสง ทิศทางของแผง และเงาที่บังแผง การทำความสะอาดแผงอย่างสม่ำเสมอช่วยลดฝุ่นและรักษาประสิทธิภาพ โรงเรียนอาจติดตั้งแผงบนหลังคาเพื่อลดการใช้ไฟฟ้าจากเชื้อเพลิงฟอสซิลและใช้เป็นตัวอย่างการเรียนรู้เรื่องพลังงานสะอาด การประเมินระบบควรพิจารณาทั้งพลังงานที่ผลิตได้ ค่าใช้จ่ายในการติดตั้ง และการดูแลรักษาตลอดอายุการใช้งาน`;
+    const runs: Array<Record<string, unknown>> = [];
+    for (const count of [3, 5, 10]) {
+      const trace = newTrace();
+      trace.sourceCharacterCount = thaiLesson.length;
+      const started = performance.now();
+      try {
+        const result = await generateQuiz({
+          count, difficulty: "mixed", questionType: "mixed",
+          materialTitle: "พลังงานแสงอาทิตย์ในโรงเรียน", sourceText: thaiLesson,
+        }, trace);
+        const outcome = {
+          test: `quiz_reliability_${count}`, model: trace.modelId, success: true,
+          requestedCount: count, acceptedCount: result.questions.length, rejectedCount: result.rejectedCount,
+          recoveryAttempts: result.replacementRounds, totalModelCalls: trace.batchCount,
+          latencyMs: Math.round(performance.now() - started), finishReasons: trace.finishReasons,
+          promptTokens: trace.inputTokens, completionTokens: trace.outputTokens, totalTokens: trace.totalTokens,
+        };
+        runs.push(outcome);
+        await saveResult(`quiz-reliability-${count}`, outcome);
+        console.info(JSON.stringify({ event: "quiz_reliability_live_test", ...outcome }));
+      } catch (error) {
+        const details = error instanceof Error && "details" in error
+          ? (error as Error & { details?: Record<string, number> }).details
+          : undefined;
+        const diagnostic = error instanceof Error && "diagnostic" in error
+          ? String((error as Error & { diagnostic?: unknown }).diagnostic ?? "generation_failed")
+          : trace.sanitizedError ?? "generation_failed";
+        const outcome = {
+          test: `quiz_reliability_${count}`, model: trace.modelId, success: false,
+          requestedCount: count, acceptedCount: details?.acceptedCount ?? null, rejectedCount: details?.rejectedCount ?? null,
+          recoveryAttempts: details?.replacementRounds ?? null, totalModelCalls: trace.batchCount,
+          latencyMs: Math.round(performance.now() - started), finishReasons: trace.finishReasons,
+          promptTokens: trace.inputTokens, completionTokens: trace.outputTokens, totalTokens: trace.totalTokens,
+          errorCategory: trace.errorCategory ?? "generation_error", sanitizedDiagnostic: diagnostic,
+        };
+        runs.push(outcome);
+        await saveResult(`quiz-reliability-${count}`, outcome);
+        console.info(JSON.stringify({ event: "quiz_reliability_live_test", ...outcome }));
+      }
+    }
+    expect(runs.map(run => run.model)).toEqual(["gpt-5.6-terra", "gpt-5.6-terra", "gpt-5.6-terra"]);
+    expect(runs.every(run => run.success === true && run.acceptedCount === run.requestedCount)).toBe(true);
+  }, 600_000);
+
   it.skipIf(!["all", "quiz-markdown"].includes(process.env.AI_LAB_OPERATION ?? "all"))("compares a strict Markdown quiz against the application's JSON schema", async () => {
     const [{ validateGeneratedQuestions }, { readFile: readFixture }] = await Promise.all([
       import("../../src/lib/ai/quiz-schema"), import("node:fs/promises"),

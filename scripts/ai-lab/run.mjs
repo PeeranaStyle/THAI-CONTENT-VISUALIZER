@@ -4,9 +4,9 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const operation = process.argv[2] || "all";
-const supported = new Set(["all", "connection", "quiz", "graph", "graph-markdown", "quiz-markdown"]);
+const supported = new Set(["all", "connection", "quiz", "quiz-reliability", "graph", "graph-markdown", "quiz-markdown"]);
 if (!supported.has(operation)) {
-  console.error("Usage: node scripts/ai-lab/run.mjs [all|connection|quiz|graph|graph-markdown|quiz-markdown]");
+  console.error("Usage: node scripts/ai-lab/run.mjs [all|connection|quiz|quiz-reliability|graph|graph-markdown|quiz-markdown]");
   process.exit(2);
 }
 

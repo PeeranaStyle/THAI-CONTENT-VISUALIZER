@@ -5,6 +5,7 @@ export class AiOutputError extends Error {
     readonly category: AiOutputErrorCategory,
     message: string,
     readonly diagnostic?: string,
+    readonly details?: Record<string, number>,
   ) {
     super(message);
     this.name = "AiOutputError";

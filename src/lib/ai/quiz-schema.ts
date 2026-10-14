@@ -17,9 +17,9 @@ export const multipleChoiceQuestionSchema = z.object({
 }).superRefine((question, context) => {
   const ids = new Set(question.options.map(option => option.id));
   const texts = question.options.map(option => normalizeText(option.text));
-  if (ids.size !== 4) context.addIssue({ code: "custom", message: "Multiple choice options must use four unique IDs." });
-  if (new Set(texts).size !== 4) context.addIssue({ code: "custom", message: "Multiple choice options must be unique." });
-  if (!ids.has(question.correctAnswer)) context.addIssue({ code: "custom", message: "Correct answer must reference an available option." });
+  if (ids.size !== 4) context.addIssue({ code: "custom", path: ["options"], message: "option_ids_not_unique" });
+  if (new Set(texts).size !== 4) context.addIssue({ code: "custom", path: ["options"], message: "option_texts_not_distinct" });
+  if (!ids.has(question.correctAnswer)) context.addIssue({ code: "custom", path: ["correctAnswer"], message: "correct_answer_option_missing" });
 });
 
 export const trueFalseQuestionSchema = z.object({
@@ -38,11 +38,15 @@ export function normalizeText(value: string): string {
   return value.normalize("NFC").toLocaleLowerCase("th-TH").replace(/[\s\p{P}\p{S}]+/gu, "").trim();
 }
 
-export function validateGeneratedQuestions(payload: unknown, sourceText: string) {
+export function validateGeneratedQuestions(
+  payload: unknown,
+  sourceText: string,
+  options: { existingQuestions?: readonly GeneratedQuestion[]; expectedType?: "multiple_choice" | "true_false" } = {},
+) {
   const envelope = generatedQuizPayloadSchema.safeParse(payload);
-  if (!envelope.success) return { questions: [] as GeneratedQuestion[], rejectedCount: 0, error: "AI response did not contain a usable question list." };
+  if (!envelope.success) return { questions: [] as GeneratedQuestion[], rejectedCount: 0, diagnostics: ["quiz_payload_invalid"], error: "AI response did not contain a usable question list." };
   const source = normalizeText(sourceText);
-  const seen = new Set<string>();
+  const seen = new Set((options.existingQuestions ?? []).map(question => normalizeText(question.question)));
   const questions: GeneratedQuestion[] = [];
   const diagnostics: string[] = [];
   let rejectedCount = 0;
@@ -50,11 +54,19 @@ export function validateGeneratedQuestions(payload: unknown, sourceText: string)
     const parsed = generatedQuestionSchema.safeParse(candidate);
     if (!parsed.success) {
       rejectedCount += 1;
-      diagnostics.push(...parsed.error.issues.slice(0, 4).map(issue => `question_${index}_schema_${issue.path.join("_") || "root"}_${issue.code}`));
+      diagnostics.push(...parsed.error.issues.slice(0, 4).map(issue => {
+        const path = issue.path.map(String).join("_") || "root";
+        return issue.code === "custom" ? `question_${index}_${path}_${issue.message}` : `question_${index}_schema_${path}_${issue.code}`;
+      }));
       continue;
     }
     const question = parsed.data;
     const key = normalizeText(question.question);
+    if (options.expectedType && question.type !== options.expectedType) {
+      rejectedCount += 1;
+      diagnostics.push(`question_${index}_question_type_mismatch`);
+      continue;
+    }
     const grounded = question.sourceReferences.every(reference => source.includes(normalizeText(reference.quote)));
     if (!grounded || seen.has(key)) {
       rejectedCount += 1;
