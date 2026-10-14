@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 export async function getDashboardData(userId: string) {
   const supabase = getSupabaseAdmin();
+  const startedAt = performance.now();
   const [materialsResult, quizzesResult, attemptsResult, masteryResult, activitiesResult, summaryResult] = await Promise.all([
     supabase.from("learning_materials").select("id,title,description,source_type,created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(4),
     supabase.from("quizzes").select("id,title,difficulty,question_count,status,created_at,material_id").eq("user_id", userId).eq("status", "ready").order("created_at", { ascending: false }).limit(4),
@@ -11,6 +12,7 @@ export async function getDashboardData(userId: string) {
     supabase.from("learning_activity").select("id,activity_type,reference_id,created_at,metadata").eq("user_id", userId).order("created_at", { ascending: false }).limit(40),
     supabase.rpc("get_user_learning_summary", { p_user_id: userId }).single(),
   ]);
+  console.info("[perf] dashboard.data", { durationMs: Math.round(performance.now() - startedAt), parallelQueries: 6 });
   if ([materialsResult, quizzesResult, attemptsResult, masteryResult, activitiesResult, summaryResult].some(result => result.error)) {
     throw new Error("Could not load your learning summary. Check the database migration and service configuration.");
   }

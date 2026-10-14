@@ -18,7 +18,7 @@ MindMap AI is a Thai-language learning workspace for private lesson materials, A
 4. Install dependencies with `npm install`.
 5. Start the local server with `npm run dev`.
 
-Set `SESSION_SECRET` to a randomly generated value of at least 32 bytes. IntelSphere model availability and account access depend on the provider account; `gemini-2.5-flash-lite` is configurable through `INTELSPHERE_MODEL`.
+Set `SESSION_SECRET` to a randomly generated value of at least 32 bytes. `gemini-3.8-flash` is the configured IntelSphere model by default; it can be changed through `INTELSPHERE_MODEL`.
 
 ## Checks
 

@@ -9,7 +9,7 @@ const schema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: optionalString,
   INTELSPHERE_BASE_URL: optionalUrl,
   INTELSPHERE_API_KEY: optionalString,
-  INTELSPHERE_MODEL: z.string().default("gemini-2.5-flash-lite"),
+  INTELSPHERE_MODEL: z.string().default("gemini-3.8-flash"),
   SESSION_SECRET: optionalString,
   MAX_UPLOAD_BYTES: z.coerce.number().int().positive().default(25_000_000),
 });
@@ -20,7 +20,7 @@ export const env = schema.parse({
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
   INTELSPHERE_BASE_URL: process.env.INTELSPHERE_BASE_URL ?? "https://gen.ai.kku.ac.th/api/v1",
   INTELSPHERE_API_KEY: process.env.INTELSPHERE_API_KEY,
-  INTELSPHERE_MODEL: process.env.INTELSPHERE_MODEL ?? "gemini-2.5-flash-lite",
+  INTELSPHERE_MODEL: process.env.INTELSPHERE_MODEL ?? "gemini-3.8-flash",
   SESSION_SECRET: process.env.SESSION_SECRET,
   MAX_UPLOAD_BYTES: process.env.MAX_UPLOAD_BYTES ?? "25000000",
 });
